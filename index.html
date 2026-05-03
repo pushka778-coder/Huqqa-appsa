@@ -21,7 +21,6 @@
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 
-        /* Дымчатый градиентный фон */
         body::before {
             content: '';
             position: fixed;
@@ -41,7 +40,6 @@
             padding-top: env(safe-area-inset-top, 20px);
         }
 
-        /* Tab Bar — тёмный стеклянный с красным акцентом */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -91,7 +89,6 @@
             transform: scale(1.05);
         }
 
-        /* Карточки — дымчатые с красной окантовкой */
         .card, .menu-item, .promo-card, .booking-item, .admin-booking, .booking-card {
             background: linear-gradient(135deg, rgba(18, 18, 22, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
             border-radius: 24px;
@@ -108,7 +105,6 @@
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(232, 69, 69, 0.15);
         }
 
-        /* Поля ввода — угольно-чёрные */
         input, select, textarea {
             font-size: 16px;
             padding: 14px 16px;
@@ -134,7 +130,6 @@
             color: rgba(255, 255, 255, 0.25);
         }
 
-        /* Кнопки — красный градиент */
         button {
             background: linear-gradient(135deg, #e84545 0%, #c92a2a 100%);
             color: #ffffff;
@@ -193,7 +188,6 @@
             margin-bottom: 0;
         }
 
-        /* Бонусный баланс — красный неон */
         .bonus-balance {
             font-size: 56px;
             font-weight: 800;
@@ -206,7 +200,6 @@
             text-shadow: 0 0 20px rgba(232, 69, 69, 0.4);
         }
 
-        /* Заголовки с красным акцентом */
         .restaurant-header h1 {
             font-size: 34px;
             font-weight: 800;
@@ -234,7 +227,6 @@
             color: #e84545;
         }
 
-        /* Категории меню */
         .menu-category {
             font-size: 20px;
             font-weight: 700;
@@ -274,7 +266,6 @@
             font-size: 14px;
         }
 
-        /* Статусы */
         .status-pending {
             color: #e84545;
             font-weight: 600;
@@ -295,7 +286,6 @@
             font-size: 12px;
         }
 
-        /* Toast уведомления */
         .toast {
             position: fixed;
             bottom: 90px;
@@ -321,7 +311,6 @@
             100% { opacity: 0; transform: translateY(-20px); }
         }
 
-        /* Модальное окно */
         .modal {
             position: fixed;
             top: 0;
@@ -354,7 +343,6 @@
             text-align: center;
         }
 
-        /* Админ панель */
         .admin-panel {
             background: linear-gradient(135deg, #e84545, #c92a2a);
             color: #ffffff;
@@ -423,7 +411,6 @@
             border-radius: 10px;
         }
 
-        /* Дымчатый эффект для фона */
         .smoke-overlay {
             position: fixed;
             top: 0;
@@ -479,8 +466,9 @@
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
         const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // ========== Регистрация ==========
+        // ========== Регистрация с датой рождения ==========
         let userPhone = null;
+        let userBirthday = null;
         let isRegistered = false;
         
         function loadUserData() {
@@ -488,11 +476,12 @@
             if (saved) {
                 const data = JSON.parse(saved);
                 userPhone = data.phone;
+                userBirthday = data.birthday;
                 isRegistered = !!userPhone;
             }
         }
         
-        async function saveUserDataToCloud(phone) {
+        async function saveUserDataToCloud(phone, birthday) {
             try {
                 const response = await fetch(USERS_API);
                 const users = await response.json();
@@ -504,6 +493,7 @@
                         userId: String(TELEGRAM_USER_ID),
                         name: TELEGRAM_USER_NAME,
                         phone: phone,
+                        birthday: birthday,
                         registeredAt: new Date().toISOString()
                     };
                     await fetch(USERS_API, {
@@ -516,18 +506,20 @@
                     addBonus("⟡ Регистрация в Huqqa Lounge ⟡", 300);
                     showToast("⟡ +300 бонусов за регистрацию! ⟡");
                     
-                } else if (existing.phone !== phone) {
+                } else if (existing.phone !== phone || existing.birthday !== birthday) {
                     await fetch(`${USERS_API}/id/${existing.id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: phone })
+                        body: JSON.stringify({ phone: phone, birthday: birthday })
                     });
                 }
                 
                 userPhone = phone;
+                userBirthday = birthday;
                 isRegistered = true;
                 localStorage.setItem(`huqqa_user_${TELEGRAM_USER_ID}`, JSON.stringify({
                     phone: phone,
+                    birthday: birthday,
                     registeredAt: new Date().toISOString()
                 }));
                 
@@ -1189,6 +1181,7 @@
                     <h3>📊 СТАТИСТИКА</h3>
                     <p>📌 Активных броней: ${bookingsCount}</p>
                     <p>🎫 +300 бонусов за регистрацию</p>
+                    ${userBirthday ? `<p>🎂 День рождения: ${userBirthday}</p>` : ''}
                 </div>
                 <div class="card">
                     <h3>📜 ИСТОРИЯ ОПЕРАЦИЙ</h3>
@@ -1266,9 +1259,15 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <h3>⟡ HUQQA LOUNGE ⟡</h3>
-                        <p style="text-align:center; margin-bottom:16px;">Укажите ваш номер телефона для бронирования</p>
+                        <p style="text-align:center; margin-bottom:16px;">Укажите ваши данные для бронирования</p>
                         <p style="text-align:center; margin-bottom:12px; color:#e84545; font-weight:600;">🎁 +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ!</p>
+                        
+                        <label>📞 НОМЕР ТЕЛЕФОНА</label>
                         <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
+                        
+                        <label>🎂 ДАТА РОЖДЕНИЯ</label>
+                        <input type="date" id="birthdayInput" placeholder="ДД.ММ.ГГГГ" max="${new Date().toISOString().split('T')[0]}">
+                        
                         <div class="button-group">
                             <button id="savePhoneBtn">⟡ ПРОДОЛЖИТЬ ⟡</button>
                         </div>
@@ -1277,13 +1276,20 @@
                 document.body.appendChild(modal);
                 document.getElementById('savePhoneBtn')?.addEventListener('click', async () => {
                     const phone = document.getElementById('phoneInput').value.trim();
-                    if (phone) {
-                        await saveUserDataToCloud(phone);
-                        modal.remove();
-                        resolve(true);
-                    } else {
+                    const birthday = document.getElementById('birthdayInput').value;
+                    
+                    if (!phone) {
                         showToast("Введите номер телефона", true);
+                        return;
                     }
+                    if (!birthday) {
+                        showToast("Введите дату рождения", true);
+                        return;
+                    }
+                    
+                    await saveUserDataToCloud(phone, birthday);
+                    modal.remove();
+                    resolve(true);
                 });
             });
         }
