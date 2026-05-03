@@ -274,6 +274,21 @@
             margin-bottom: 4px;
             color: var(--tg-theme-hint-color, #666);
         }
+
+        .menu-category {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--tg-theme-button-color, #31b545);
+        }
+
+        .menu-subcategory {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 15px 0 8px 0;
+            color: var(--tg-theme-hint-color, #666);
+        }
     </style>
 </head>
 <body>
@@ -598,13 +613,74 @@
         // ========== Данные приложения ==========
         let bookings = [];
         
-        const menu = [
-            { id: 1, name: "🥗 Цезарь с креветками", desc: "Салат, креветки, пармезан", price: 590, category: "Салаты" },
-            { id: 2, name: "🍲 Борщ с пампушками", desc: "Классический украинский борщ", price: 390, category: "Супы" },
-            { id: 3, name: "🥩 Рибай стейк", desc: "Мраморная говядина", price: 1890, category: "Горячее" },
-            { id: 4, name: "🍕 Маргарита", desc: "Томатный соус, моцарелла", price: 650, category: "Пицца" },
-            { id: 5, name: "🍣 Филадельфия", desc: "Лосось, сливочный сыр", price: 750, category: "Роллы" },
-            { id: 6, name: "🥤 Домашний лимонад", desc: "Имбирь, мята, лайм", price: 250, category: "Напитки" }
+        // Новое меню
+        const menuItems = [
+            // Кальяны
+            { name: "Бизнес кальян (По будням с 12:00 - 17:00)", price: 1500, category: "Кальяны", subcategory: "Кальяны" },
+            { name: "Кальян на классической чаше", price: 1700, category: "Кальяны", subcategory: "Кальяны" },
+            { name: "Премиум кальян с сигарным листом", price: 1900, category: "Кальяны", subcategory: "Кальяны" },
+            { name: "Авторский кальян на цитрусовый (Апельсин, Грейпфрут)", price: 2500, category: "Кальяны", subcategory: "Кальяны" },
+            { name: "Кальян на фруктах (Грейпфрут/Гранат/Апельсин)", price: 2000, category: "Кальяны", subcategory: "Кальяны" },
+            // Холодные напитки
+            { name: "Энергетик Adrinaline Rush", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Энергетик RedBull", price: 300, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Coca Cola Original", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Добрый Кола", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Добрый Кола Зеро", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Добрый Фанта", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Добрый Спрайт", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Dr.Pepper", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Mountain Dew (Лимон-Лайм/Вишня/Малина/Ежевика)", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Лимонад Star Bar Craft (Японская груша/Черника-Лаванда/Малина-Имбирь/Грейпфрут-Малина)", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Лимонад Borjomi (Цитрус/Мандарин/Тархун/Груша)", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
+            { name: "Соки Rich (Апельсин/Яблоко/Томат/Вишня/Манго/Персик)", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
+            // Лимонады
+            { name: "Графин 1л (В ассортименте)", price: 1300, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Манго - Маракуйя (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Мохито (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Маракуйя - Малина (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Цитрусовый (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Ягодный (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
+            { name: "Компот 1л (Айва/Белая черешня/Вишня/Фейхоа)", price: 700, category: "Напитки", subcategory: "Лимонады" },
+            // Пиво
+            { name: "Пиво Корона Экстра", price: 400, category: "Напитки", subcategory: "Пиво" },
+            { name: "Пиво Стелла Артуа", price: 300, category: "Напитки", subcategory: "Пиво" },
+            { name: "Пиво Стелла Артуа без алк.", price: 300, category: "Напитки", subcategory: "Пиво" },
+            { name: "Пиво Хугарден (Классическое/Вишня/Грейпфрут)", price: 300, category: "Напитки", subcategory: "Пиво" },
+            // Чаи
+            { name: "Авторский Банановый Улун", price: 600, category: "Чаи", subcategory: "Чаи" },
+            { name: "Авторский Ваниль/Корица/Яблоко", price: 600, category: "Чаи", subcategory: "Чаи" },
+            { name: "Авторский Малина/Имбирь/Мёд", price: 600, category: "Чаи", subcategory: "Чаи" },
+            { name: "Авторский Ташкентский", price: 600, category: "Чаи", subcategory: "Чаи" },
+            { name: "Каркаде", price: 400, category: "Чаи", subcategory: "Чаи" },
+            { name: "Наглый Фрукт", price: 400, category: "Чаи", subcategory: "Чаи" },
+            { name: "Молочный Улун", price: 400, category: "Чаи", subcategory: "Чаи" },
+            { name: "Чёрный Чабрец", price: 400, category: "Чаи", subcategory: "Чаи" },
+            { name: "Облепиховый с Мёдом", price: 350, category: "Чаи", subcategory: "Чаи" },
+            { name: "Черный Бергамот", price: 300, category: "Чаи", subcategory: "Чаи" },
+            { name: "Зеленый с Жасмином", price: 300, category: "Чаи", subcategory: "Чаи" },
+            // Кофе
+            { name: "Эспрессо", price: 150, category: "Кофе", subcategory: "Кофе" },
+            { name: "Американо", price: 200, category: "Кофе", subcategory: "Кофе" },
+            { name: "Капучино", price: 300, category: "Кофе", subcategory: "Кофе" },
+            { name: "Латте", price: 300, category: "Кофе", subcategory: "Кофе" },
+            { name: "Бамбл", price: 350, category: "Кофе", subcategory: "Кофе" },
+            { name: "Фраппе Баунти", price: 350, category: "Кофе", subcategory: "Кофе" },
+            { name: "Эспрессо Тоник с Лаймом", price: 350, category: "Кофе", subcategory: "Кофе" },
+            // Пиццы
+            { name: "СуперМясная (405гр, 854ккал)", price: 1000, category: "Пиццы", subcategory: "Пиццы" },
+            { name: "4 сыра (350гр, 794ккал)", price: 900, category: "Пиццы", subcategory: "Пиццы" },
+            { name: "Пепперони (345гр, 570ккал)", price: 800, category: "Пиццы", subcategory: "Пиццы" },
+            { name: "Ветчина - Грибы (360гр, 716ккал)", price: 800, category: "Пиццы", subcategory: "Пиццы" },
+            { name: "Маргарита (340гр, 570ккал)", price: 700, category: "Пиццы", subcategory: "Пиццы" },
+            // Добавки
+            { name: "Апельсин/Грейпфрут/Лимон/Яблоко", price: 150, category: "Добавки", subcategory: "Добавки" },
+            { name: "Мёд 50гр", price: 100, category: "Добавки", subcategory: "Добавки" },
+            { name: "Сироп 50гр", price: 100, category: "Добавки", subcategory: "Добавки" },
+            // Пробковый сбор
+            { name: "Крепкое (Виски/Водка/Коньяк/Текила/Бурбон/Ром)", price: 400, category: "Пробковый сбор", subcategory: "Пробковый сбор" },
+            { name: "Вино/Шампанское", price: 200, category: "Пробковый сбор", subcategory: "Пробковый сбор" },
+            { name: "Пиво", price: 100, category: "Пробковый сбор", subcategory: "Пробковый сбор" }
         ];
         
         const promos = [
@@ -815,7 +891,7 @@
             });
         }
         
-        // ========== Бронирование (без бонусов) ==========
+        // ========== Бронирование ==========
         async function renderBooking() {
             await loadBookings();
             const myActiveBookings = bookings.filter(b => 
@@ -870,26 +946,64 @@
             });
         }
         
-        // ========== Меню (без кнопок лайков) ==========
+        // ========== Меню (новое) ==========
         function renderMenu() {
-            const categories = [...new Set(menu.map(item => item.category))];
             let html = `<h2>📖 Наше меню</h2>`;
-            categories.forEach(cat => {
-                html += `<h3>${cat}</h3>`;
-                const items = menu.filter(item => item.category === cat);
-                items.forEach(item => {
-                    html += `
-                        <div class="menu-item">
-                            <strong>${item.name}</strong> — ${item.price} ₽<br>
-                            <small>${item.desc}</small>
-                        </div>
-                    `;
-                });
+            
+            // Кальяны
+            html += `<div class="menu-category">💨 Кальяны</div>`;
+            menuItems.filter(i => i.category === "Кальяны").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
             });
+            
+            // Напитки с подкатегориями
+            html += `<div class="menu-category">🥤 Напитки</div>`;
+            const drinkSubcategories = ["Холодные напитки", "Лимонады", "Пиво"];
+            drinkSubcategories.forEach(sub => {
+                const items = menuItems.filter(i => i.subcategory === sub);
+                if (items.length > 0) {
+                    html += `<div class="menu-subcategory">${sub}</div>`;
+                    items.forEach(item => {
+                        html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+                    });
+                }
+            });
+            
+            // Чаи
+            html += `<div class="menu-category">🍵 Чаи</div>`;
+            menuItems.filter(i => i.category === "Чаи").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+            });
+            
+            // Кофе
+            html += `<div class="menu-category">☕ Кофе</div>`;
+            menuItems.filter(i => i.category === "Кофе").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+            });
+            
+            // Пиццы
+            html += `<div class="menu-category">🍕 Пиццы</div>`;
+            menuItems.filter(i => i.category === "Пиццы").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+            });
+            
+            // Добавки
+            html += `<div class="menu-category">🥄 Добавки</div>`;
+            menuItems.filter(i => i.category === "Добавки").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+            });
+            
+            // Пробковый сбор
+            html += `<div class="menu-category">🍾 Пробковый сбор</div>`;
+            html += `<div class="card"><small>Цены указаны за 1 бутылку!</small></div>`;
+            menuItems.filter(i => i.category === "Пробковый сбор").forEach(item => {
+                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
+            });
+            
             document.getElementById('app').innerHTML = html;
         }
         
-        // ========== Моя карта (бывшие бонусы) ==========
+        // ========== Моя карта ==========
         function renderBonus() {
             const bookingsCount = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b)).length;
             const html = `
@@ -913,7 +1027,7 @@
             document.getElementById('app').innerHTML = html;
         }
         
-        // ========== Акции (обновлённые) ==========
+        // ========== Акции ==========
         function renderPromo() {
             const html = `
                 <h2>🔥 Акции и скидки</h2>
@@ -938,7 +1052,7 @@
             });
         }
         
-        // ========== Контакты (обновлённые + карта с точкой) ==========
+        // ========== Контакты ==========
         function renderContacts() {
             const html = `
                 <h2>📞 Контакты</h2>
