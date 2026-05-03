@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Huqqa Restaurant – бонусы и бронирование</title>
+    <title>Huqqa Lounge – бронирование столов</title>
     <style>
         * {
             margin: 0;
@@ -284,7 +284,7 @@
     <div class="tab-bar">
         <button class="tab" data-tab="booking">📅<span>Стол</span></button>
         <button class="tab" data-tab="menu">📖<span>Меню</span></button>
-        <button class="tab" data-tab="bonus">🎁<span>Бонусы</span></button>
+        <button class="tab" data-tab="bonus">🎁<span>Моя карта</span></button>
         <button class="tab" data-tab="promo">🔥<span>Акции</span></button>
         <button class="tab" data-tab="contacts">📞<span>Контакты</span></button>
     </div>
@@ -482,7 +482,7 @@
                 const formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('photo', imageFile);
-                formData.append('caption', `📢 *НОВОСТЬ ОТ РЕСТОРАНА HUQQA*\n\n${caption}\n\n— Администрация Huqqa`);
+                formData.append('caption', `📢 *НОВОСТЬ ОТ HUQQA LOUNGE*\n\n${caption}\n\n— Администрация Huqqa Lounge`);
                 formData.append('parse_mode', 'Markdown');
                 const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
                 return response.ok;
@@ -498,7 +498,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: chatId,
-                        text: `📢 *НОВОСТЬ ОТ РЕСТОРАНА HUQQA*\n\n${text}\n\n— Администрация Huqqa`,
+                        text: `📢 *НОВОСТЬ ОТ HUQQA LOUNGE*\n\n${text}\n\n— Администрация Huqqa Lounge`,
                         parse_mode: 'Markdown'
                     })
                 });
@@ -608,9 +608,8 @@
         ];
         
         const promos = [
-            { id: 1, name: "🎉 Welcome бонус", desc: "Скидка 20% на первый заказ", discount: 20, code: "WELCOME20" },
-            { id: 2, name: "🍺 Счастливый час", desc: "Скидка 15% с 15:00 до 17:00", discount: 15, code: "HAPPY15" },
-            { id: 3, name: "🎂 День рождения", desc: "Именинникам скидка 25%", discount: 25, code: "BIRTHDAY25" }
+            { id: 2, name: "🕒 Счастливые часы", desc: "Пн-Пт с 12:00 до 17:00. Кальян всего 1500₽!", discount: 0, code: "HAPPY1500" },
+            { id: 3, name: "🎂 День рождения", desc: "Именинникам скидка 20% на весь счёт", discount: 20, code: "BIRTHDAY20" }
         ];
         
         let userBonuses = { balance: 100, history: [] };
@@ -620,7 +619,7 @@
             if (saved) {
                 userBonuses = JSON.parse(saved);
             } else {
-                userBonuses = { balance: 100, history: [{ date: new Date().toLocaleString(), reason: "Регистрация", amount: 100 }] };
+                userBonuses = { balance: 0, history: [] };
                 saveBonuses();
             }
         }
@@ -629,11 +628,10 @@
             localStorage.setItem(`huqqa_bonuses_${TELEGRAM_USER_ID}`, JSON.stringify(userBonuses));
         }
         
+        // Функция добавления бонусов (сохранена для совместимости, но не используется)
         function addBonus(reason, amount) {
-            userBonuses.balance += amount;
-            userBonuses.history.unshift({ date: new Date().toLocaleString(), reason: reason, amount: amount });
-            if (userBonuses.history.length > 10) userBonuses.history.pop();
-            saveBonuses();
+            // Бонусы отключены по требованию
+            console.log("Бонусы отключены:", reason, amount);
         }
         
         async function loadBookings() {
@@ -704,7 +702,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== Админ-панель (с редактированием и удалением) ==========
+        // ========== Админ-панель ==========
         async function renderAdminPanel() {
             const deleted = await deleteExpiredBookings();
             if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
@@ -815,7 +813,7 @@
             });
         }
         
-        // ========== Бронирование ==========
+        // ========== Бронирование (без бонусов) ==========
         async function renderBooking() {
             await loadBookings();
             const myActiveBookings = bookings.filter(b => 
@@ -823,9 +821,7 @@
             );
             const html = `
                 <div class="restaurant-header">
-                    <h1>🍽️ Huqqa Restaurant</h1>
-                    <p>Забронируй стол и получи +50 бонусов</p>
-                    ${userPhone ? `<p style="font-size:12px">📱 Ваш номер: ${userPhone}</p>` : ''}
+                    <h1>🏮 Huqqa Lounge</h1>
                 </div>
                 <div class="card">
                     <input type="text" id="name" placeholder="Ваше имя" value="${TELEGRAM_USER_NAME}">
@@ -833,9 +829,9 @@
                     <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
                     <input type="time" id="time">
                     <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
-                    <button id="submitBookingBtn">✅ Забронировать (+50 бонусов)</button>
+                    <button id="submitBookingBtn">✅ Забронировать стол</button>
                 </div>
-                <h3>📋 Мои активные бронирования</h3>
+                <h3>📋 Мои бронирования</h3>
                 ${myActiveBookings.length === 0 ? '<p>У вас нет активных броней</p>' : 
                     myActiveBookings.map(b => `
                         <div class="booking-item">
@@ -866,13 +862,13 @@
                 };
                 const saved = await saveBooking(newBooking);
                 if (saved) {
-                    addBonus(`Бронь стола на ${date} ${time}`, 50);
-                    showToast(`✅ Стол забронирован! +50 бонусов`);
+                    showToast(`✅ Стол забронирован!`);
                     setTimeout(() => renderBooking(), 1000);
                 }
             });
         }
         
+        // ========== Меню (без кнопок лайков) ==========
         function renderMenu() {
             const categories = [...new Set(menu.map(item => item.category))];
             let html = `<h2>📖 Наше меню</h2>`;
@@ -883,44 +879,39 @@
                     html += `
                         <div class="menu-item">
                             <strong>${item.name}</strong> — ${item.price} ₽<br>
-                            <small>${item.desc}</small><br>
-                            <button class="likeBtn" data-name="${item.name}">❤️ Лайк (+5 бонусов)</button>
+                            <small>${item.desc}</small>
                         </div>
                     `;
                 });
             });
             document.getElementById('app').innerHTML = html;
-            document.querySelectorAll('.likeBtn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    addBonus(`Лайк блюда: ${e.target.dataset.name}`, 5);
-                    showToast(`❤️ +5 бонусов!`);
-                    e.target.disabled = true;
-                    e.target.textContent = '✓ Лайкнут';
-                });
-            });
         }
         
+        // ========== Моя карта (бывшие бонусы) ==========
         function renderBonus() {
             const bookingsCount = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b)).length;
-            const loyaltyLevel = bookingsCount >= 3 ? '🥇 Постоянный гость (кешбэк 10%)' : '⭐ Новый гость (кешбэк 5%)';
             const html = `
-                <h2>🎁 Моя лояльность</h2>
-                <div class="loyalty-badge">${loyaltyLevel}</div>
-                <div class="bonus-balance">${userBonuses.balance} бонусов</div>
+                <h2>🎁 Моя карта гостя</h2>
+                <div class="card">
+                    <h3>💰 Бонусный баланс</h3>
+                    <div class="bonus-balance">${userBonuses.balance} бонусов</div>
+                    <p>100 бонусов = 50₽ скидка</p>
+                </div>
+                <div class="card">
+                    <h3>📊 Статистика</h3>
+                    <p>📌 Активных броней: ${bookingsCount}</p>
+                    <p>🎫 Для получения бонусов обращайтесь к администратору</p>
+                </div>
                 <div class="card">
                     <h3>📜 История операций</h3>
                     ${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : 
                         userBonuses.history.map(h => `<div>${h.date} — +${h.amount} (${h.reason})</div>`).join('')}
                 </div>
-                <div class="card">
-                    <h3>💰 Как потратить бонусы?</h3>
-                    <p>100 бонусов = 50₽ скидка</p>
-                    <p><small>📌 Активные брони: ${bookingsCount}</small></p>
-                </div>
             `;
             document.getElementById('app').innerHTML = html;
         }
         
+        // ========== Акции (обновлённые) ==========
         function renderPromo() {
             const html = `
                 <h2>🔥 Акции и скидки</h2>
@@ -931,6 +922,10 @@
                         <button class="copyPromoBtn" data-code="${p.code}">📋 Скопировать код: ${p.code}</button>
                     </div>
                 `).join('')}
+                <div class="card">
+                    <h3>💡 Как использовать?</h3>
+                    <p>Скопируй промокод и назови его официанту при заказе.</p>
+                </div>
             `;
             document.getElementById('app').innerHTML = html;
             document.querySelectorAll('.copyPromoBtn').forEach(btn => {
@@ -941,17 +936,19 @@
             });
         }
         
+        // ========== Контакты (обновлённые) ==========
         function renderContacts() {
             const html = `
                 <h2>📞 Контакты</h2>
                 <div class="card">
-                    <p>📍 ул. Тверская, д. 15, Москва</p>
-                    <p>📞 <a href="tel:+74951234567">+7 (495) 123-45-67</a></p>
-                    <p>🕒 Ежедневно: 12:00 – 23:00</p>
+                    <p>📍 ул. Молодежная 15Б, г. Химки</p>
+                    <p>📞 <a href="tel:+79099846677">+7 (909) 984-66-77</a></p>
+                    <p>🕒 Вс-Чт: 12:00 – 02:00</p>
+                    <p>🕒 Пт-Сб: 12:00 – 03:00</p>
                     <button id="shareContactBtn">📱 Поделиться номером</button>
                 </div>
                 <iframe width="100%" height="250" frameborder="0" style="border-radius:16px" 
-                    src="https://yandex.ru/map-widget/v1/?ll=37.617698,55.755864&z=15"></iframe>
+                    src="https://yandex.ru/map-widget/v1/?ll=37.426336,55.877167&z=15"></iframe>
             `;
             document.getElementById('app').innerHTML = html;
             document.getElementById('shareContactBtn')?.addEventListener('click', () => showToast(`Номер передан ресторану`));
@@ -980,8 +977,8 @@
                 modal.className = 'modal';
                 modal.innerHTML = `
                     <div class="modal-content">
-                        <h3>📱 Добро пожаловать!</h3>
-                        <p>Пожалуйста, укажите ваш номер телефона для получения бонусов и уведомлений.</p>
+                        <h3>📱 Добро пожаловать в Huqqa Lounge!</h3>
+                        <p>Пожалуйста, укажите ваш номер телефона для бронирования столов.</p>
                         <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
                         <div class="button-group">
                             <button id="savePhoneBtn">✅ Сохранить</button>
