@@ -65,7 +65,7 @@
             margin-bottom: 16px;
         }
 
-        button, input, select {
+        button, input, select, textarea {
             font-size: 16px;
             padding: 12px;
             border-radius: 12px;
@@ -74,6 +74,11 @@
             color: var(--tg-theme-text-color, black);
             width: 100%;
             margin-bottom: 12px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
         }
 
         button {
@@ -95,6 +100,13 @@
             background: #dc3545;
             width: auto;
             padding: 8px 16px;
+        }
+
+        .broadcast-btn {
+            background: #9c27b0;
+            width: auto;
+            padding: 8px 16px;
+            margin-bottom: 16px;
         }
 
         .bonus-balance {
@@ -173,6 +185,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         .loading {
@@ -186,6 +199,48 @@
             margin-bottom: 16px;
             width: auto;
             padding: 8px 16px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-bg-color, white);
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .phone-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .phone-input input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .phone-input button {
+            width: auto;
+            margin-bottom: 0;
+            padding: 12px 20px;
         }
     </style>
 </head>
@@ -205,17 +260,12 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         // ==================== НАСТРОЙКИ ====================
-        // ✅ ТВОЙ API-ключ от sheet.best (уже вставлен!)
         const SHEET_API = "https://api.sheetbest.com/sheets/86b2770d-6921-43a6-ada0-a16dbd1ce54c";
-        
-        // 👑 Администраторы (твой Telegram ID уже здесь)
         const ADMIN_IDS = [755574601];
+        const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";  // Твой токен
         
-        // ⚠️ ВНИМАНИЕ: бесплатный тариф sheet.best — 250 запросов/месяц
-        //    Для теста хватит. При нагрузке нужно перейти на платный тариф.
         // ===================================================
         
-        // --- Инициализация Telegram ---
         let tg = window.Telegram?.WebApp;
         if (!tg || !tg.initDataUnsafe?.user?.id) {
             tg = {
@@ -236,7 +286,168 @@
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
         const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // --- Данные приложения ---
+        // ========== Регистрация по номеру телефона ==========
+        let userPhone = null;
+        let isRegistered = false;
+        
+        function loadUserData() {
+            const saved = localStorage.getItem(`huqqa_user_${TELEGRAM_USER_ID}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                userPhone = data.phone;
+                isRegistered = !!userPhone;
+            }
+        }
+        
+        function saveUserData(phone) {
+            userPhone = phone;
+            isRegistered = true;
+            localStorage.setItem(`huqqa_user_${TELEGRAM_USER_ID}`, JSON.stringify({
+                phone: phone,
+                registeredAt: new Date().toISOString()
+            }));
+            
+            // Добавляем пользователя в базу для рассылок
+            addUserToBroadcastList(TELEGRAM_USER_ID, phone);
+        }
+        
+        // База пользователей для рассылок
+        let broadcastUsers = [];
+        
+        function loadBroadcastUsers() {
+            const saved = localStorage.getItem(`huqqa_broadcast_users`);
+            if (saved) {
+                broadcastUsers = JSON.parse(saved);
+            }
+        }
+        
+        function saveBroadcastUsers() {
+            localStorage.setItem(`huqqa_broadcast_users`, JSON.stringify(broadcastUsers));
+        }
+        
+        function addUserToBroadcastList(userId, phone) {
+            loadBroadcastUsers();
+            const exists = broadcastUsers.find(u => u.userId === userId);
+            if (!exists) {
+                broadcastUsers.push({
+                    userId: userId,
+                    phone: phone,
+                    name: TELEGRAM_USER_NAME,
+                    registeredAt: new Date().toISOString()
+                });
+                saveBroadcastUsers();
+                console.log("👥 Пользователь добавлен в базу для рассылок");
+            }
+        }
+        
+        function getBroadcastUsers() {
+            loadBroadcastUsers();
+            return broadcastUsers;
+        }
+        
+        // Модальное окно для ввода номера телефона
+        function showPhoneRegistrationModal() {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>📱 Добро пожаловать!</h3>
+                        <p>Пожалуйста, укажите ваш номер телефона для получения бонусов и уведомлений.</p>
+                        <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
+                        <div class="button-group">
+                            <button id="savePhoneBtn">✅ Сохранить</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('savePhoneBtn')?.addEventListener('click', () => {
+                    const phone = document.getElementById('phoneInput').value.trim();
+                    if (phone) {
+                        saveUserData(phone);
+                        modal.remove();
+                        resolve(true);
+                    } else {
+                        showToast("Введите номер телефона", true);
+                    }
+                });
+            });
+        }
+        
+        // ========== Рассылка ==========
+        async function sendBroadcast(message) {
+            const users = getBroadcastUsers();
+            if (users.length === 0) {
+                showToast("❌ Нет зарегистрированных пользователей", true);
+                return { success: false, count: 0 };
+            }
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            showToast(`📢 Начинаю рассылку ${users.length} пользователям...`);
+            
+            for (const user of users) {
+                try {
+                    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: user.userId,
+                            text: `📢 *НОВОСТЬ ОТ РЕСТОРАНА HUQQA*\n\n${message}\n\n— Администрация Huqqa`,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (error) {
+                    failCount++;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            showToast(`✅ Рассылка завершена! Отправлено: ${successCount}, ошибок: ${failCount}`);
+            return { success: true, count: successCount };
+        }
+        
+        function showBroadcastModal() {
+            const users = getBroadcastUsers();
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>📢 Сделать рассылку</h3>
+                    <p>👥 Пользователей в базе: ${users.length}</p>
+                    <textarea id="broadcastMessage" placeholder="Введите текст сообщения..."></textarea>
+                    <div class="button-group">
+                        <button id="sendBroadcastBtn" style="background:#9c27b0;">📤 Отправить всем</button>
+                        <button id="closeModalBtn" style="background:#666;">Отмена</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () => {
+                const message = document.getElementById('broadcastMessage').value;
+                if (!message.trim()) {
+                    showToast("Введите текст сообщения", true);
+                    return;
+                }
+                await sendBroadcast(message);
+                modal.remove();
+            });
+            
+            document.getElementById('closeModalBtn')?.addEventListener('click', () => {
+                modal.remove();
+            });
+        }
+        
+        // ========== Данные приложения ==========
         let bookings = [];
         
         const menu = [
@@ -254,7 +465,6 @@
             { id: 3, name: "🎂 День рождения", desc: "Именинникам скидка 25%", discount: 25, code: "BIRTHDAY25" }
         ];
         
-        // --- Бонусы (хранятся в браузере, но брони – в Google Sheets) ---
         let userBonuses = { balance: 100, history: [] };
         
         function loadBonuses() {
@@ -278,17 +488,14 @@
             saveBonuses();
         }
         
-        // --- Работа с Google Sheets (через sheet.best) ---
         async function loadBookings() {
             try {
                 const response = await fetch(SHEET_API);
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 const data = await response.json();
                 bookings = data;
-                console.log("📦 Загружено броней:", bookings.length);
                 return bookings;
             } catch (error) {
-                console.error("Ошибка:", error);
                 bookings = [];
                 return [];
             }
@@ -298,6 +505,7 @@
             try {
                 booking.id = Date.now().toString();
                 booking.created_at = new Date().toISOString();
+                booking.phone = userPhone || booking.phone;
                 
                 const response = await fetch(SHEET_API, {
                     method: 'POST',
@@ -305,11 +513,9 @@
                     body: JSON.stringify([booking])
                 });
                 if (!response.ok) throw new Error('Ошибка сохранения');
-                console.log("💾 Бронь сохранена в Google Sheets");
                 return booking;
             } catch (error) {
-                console.error("Ошибка:", error);
-                showToast("Ошибка сохранения! Проверьте настройки API", true);
+                showToast("Ошибка сохранения!", true);
                 return null;
             }
         }
@@ -322,10 +528,8 @@
                     body: JSON.stringify(updatedData)
                 });
                 if (!response.ok) throw new Error('Ошибка обновления');
-                console.log("✏️ Бронь обновлена в Google Sheets");
                 return true;
             } catch (error) {
-                console.error("Ошибка:", error);
                 return false;
             }
         }
@@ -336,10 +540,8 @@
                     method: 'DELETE'
                 });
                 if (!response.ok) throw new Error('Ошибка удаления');
-                console.log("🗑️ Бронь удалена из Google Sheets");
                 return true;
             } catch (error) {
-                console.error("Ошибка:", error);
                 return false;
             }
         }
@@ -350,14 +552,14 @@
             toast.textContent = message;
             toast.style.background = isError ? 'rgba(220, 50, 50, 0.95)' : 'rgba(0,0,0,0.85)';
             document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
+            setTimeout(() => toast.remove(), 3000);
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // --- АДМИН-ПАНЕЛЬ (читает реальные брони из Google Sheets) ---
+        // ========== Админ-панель ==========
         async function renderAdminPanel() {
             await loadBookings();
-            
+            const users = getBroadcastUsers();
             const pendingBookings = bookings.filter(b => b.status === 'pending');
             const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
             
@@ -365,8 +567,11 @@
                 <div class="restaurant-header">
                     <h1>👑 Админ-панель</h1>
                     <div class="admin-panel">Вы вошли как администратор | ID: ${TELEGRAM_USER_ID}</div>
-                    <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
-                    <p style="font-size:12px; margin-top:5px;">📊 Всего броней в Google Sheets: ${bookings.length}</p>
+                    <div class="button-group">
+                        <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
+                        <button class="broadcast-btn" id="broadcastBtn">📢 Сделать рассылку</button>
+                    </div>
+                    <p style="font-size:12px; margin-top:5px;">👥 Зарегистрировано: ${users.length} | 📊 Броней: ${bookings.length}</p>
                 </div>
             `;
             
@@ -412,6 +617,7 @@
             document.getElementById('app').innerHTML = html;
             
             document.getElementById('refreshBtn')?.addEventListener('click', () => renderAdminPanel());
+            document.getElementById('broadcastBtn')?.addEventListener('click', () => showBroadcastModal());
             
             document.querySelectorAll('.confirm-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
@@ -432,7 +638,7 @@
             });
         }
         
-        // --- Бронирование стола (сохраняется в Google Sheets) ---
+        // ========== Бронирование ==========
         async function renderBooking() {
             await loadBookings();
             const myBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID));
@@ -441,10 +647,11 @@
                 <div class="restaurant-header">
                     <h1>🍽️ Huqqa Restaurant</h1>
                     <p>Забронируй стол и получи +50 бонусов</p>
+                    ${userPhone ? `<p style="font-size:12px">📱 Ваш номер: ${userPhone}</p>` : ''}
                 </div>
                 <div class="card">
                     <input type="text" id="name" placeholder="Ваше имя" value="${TELEGRAM_USER_NAME}">
-                    <input type="tel" id="phone" placeholder="Телефон" required>
+                    <input type="tel" id="phone" placeholder="Телефон" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
                     <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
                     <input type="time" id="time">
                     <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
@@ -492,7 +699,6 @@
             });
         }
         
-        // --- Остальные вкладки (без изменений) ---
         function renderMenu() {
             const categories = [...new Set(menu.map(item => item.category))];
             let html = `<h2>📖 Наше меню</h2>`;
@@ -576,9 +782,16 @@
             document.getElementById('shareContactBtn')?.addEventListener('click', () => showToast(`Номер передан ресторану`));
         }
         
-        // --- Роутинг ---
+        // ========== Роутинг ==========
         let currentTab = "booking";
+        
         async function renderCurrentTab() {
+            if (!isRegistered) {
+                await showPhoneRegistrationModal();
+                renderCurrentTab();
+                return;
+            }
+            
             if (currentTab === 'admin' && IS_ADMIN) await renderAdminPanel();
             else if (currentTab === 'booking') await renderBooking();
             else if (currentTab === 'menu') renderMenu();
@@ -607,7 +820,8 @@
             });
         }
         
-        // --- Запуск ---
+        // ========== Запуск ==========
+        loadUserData();
         loadBonuses();
         setupTabs();
         document.querySelector('.tab').classList.add('active');
@@ -615,8 +829,7 @@
         
         console.log("👤 User ID:", TELEGRAM_USER_ID);
         console.log("👑 Is Admin:", IS_ADMIN);
-        console.log("✅ Google Sheets API: подключён через sheet.best");
-        console.log("🔗 URL:", SHEET_API);
+        console.log("📱 Phone registered:", !!userPhone);
     </script>
 </body>
 </html>
