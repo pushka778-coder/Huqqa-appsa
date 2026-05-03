@@ -225,23 +225,6 @@
         .modal-content h3 {
             margin-bottom: 15px;
         }
-
-        .phone-input {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .phone-input input {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .phone-input button {
-            width: auto;
-            margin-bottom: 0;
-            padding: 12px 20px;
-        }
     </style>
 </head>
 <body>
@@ -260,10 +243,17 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         // ==================== НАСТРОЙКИ ====================
+        // API для Google Sheets (брони)
         const SHEET_API = "https://api.sheetbest.com/sheets/86b2770d-6921-43a6-ada0-a16dbd1ce54c";
-        const ADMIN_IDS = [755574601];
-        const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";  // Твой токен
         
+        // API для пользователей (регистрация и рассылка)
+        const USERS_API = "https://api.sheetbest.com/sheets/912a1d92-a006-4a4c-9085-7d6f3722e453";
+        
+        // 👑 Администраторы
+        const ADMIN_IDS = [755574601];
+        
+        // 🤖 Токен бота
+        const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
         // ===================================================
         
         let tg = window.Telegram?.WebApp;
@@ -286,7 +276,7 @@
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
         const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // ========== Регистрация по номеру телефона ==========
+        // ========== Регистрация по номеру телефона (сохраняется в ОБЩУЮ таблицу) ==========
         let userPhone = null;
         let isRegistered = false;
         
@@ -299,50 +289,63 @@
             }
         }
         
-        function saveUserData(phone) {
-            userPhone = phone;
-            isRegistered = true;
-            localStorage.setItem(`huqqa_user_${TELEGRAM_USER_ID}`, JSON.stringify({
-                phone: phone,
-                registeredAt: new Date().toISOString()
-            }));
-            
-            // Добавляем пользователя в базу для рассылок
-            addUserToBroadcastList(TELEGRAM_USER_ID, phone);
-        }
-        
-        // База пользователей для рассылок
-        let broadcastUsers = [];
-        
-        function loadBroadcastUsers() {
-            const saved = localStorage.getItem(`huqqa_broadcast_users`);
-            if (saved) {
-                broadcastUsers = JSON.parse(saved);
-            }
-        }
-        
-        function saveBroadcastUsers() {
-            localStorage.setItem(`huqqa_broadcast_users`, JSON.stringify(broadcastUsers));
-        }
-        
-        function addUserToBroadcastList(userId, phone) {
-            loadBroadcastUsers();
-            const exists = broadcastUsers.find(u => u.userId === userId);
-            if (!exists) {
-                broadcastUsers.push({
-                    userId: userId,
+        async function saveUserDataToCloud(phone) {
+            try {
+                // Проверяем, есть ли уже такой пользователь
+                const response = await fetch(USERS_API);
+                const users = await response.json();
+                const existing = users.find(u => String(u.userId) === String(TELEGRAM_USER_ID));
+                
+                if (!existing) {
+                    // Добавляем нового пользователя
+                    const newUser = {
+                        id: Date.now().toString(),
+                        userId: String(TELEGRAM_USER_ID),
+                        name: TELEGRAM_USER_NAME,
+                        phone: phone,
+                        registeredAt: new Date().toISOString()
+                    };
+                    await fetch(USERS_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify([newUser])
+                    });
+                    console.log("✅ Пользователь добавлен в облачную базу");
+                } else if (existing.phone !== phone) {
+                    // Обновляем телефон
+                    await fetch(`${USERS_API}/id/${existing.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: phone })
+                    });
+                    console.log("✅ Телефон пользователя обновлён");
+                }
+                
+                // Сохраняем локально
+                userPhone = phone;
+                isRegistered = true;
+                localStorage.setItem(`huqqa_user_${TELEGRAM_USER_ID}`, JSON.stringify({
                     phone: phone,
-                    name: TELEGRAM_USER_NAME,
                     registeredAt: new Date().toISOString()
-                });
-                saveBroadcastUsers();
-                console.log("👥 Пользователь добавлен в базу для рассылок");
+                }));
+                
+                return true;
+            } catch (error) {
+                console.error("Ошибка сохранения пользователя:", error);
+                return false;
             }
         }
         
-        function getBroadcastUsers() {
-            loadBroadcastUsers();
-            return broadcastUsers;
+        // Получить всех пользователей из облака для рассылки
+        async function getBroadcastUsers() {
+            try {
+                const response = await fetch(USERS_API);
+                const users = await response.json();
+                return users;
+            } catch (error) {
+                console.error("Ошибка загрузки пользователей:", error);
+                return [];
+            }
         }
         
         // Модальное окно для ввода номера телефона
@@ -362,10 +365,10 @@
                 `;
                 document.body.appendChild(modal);
                 
-                document.getElementById('savePhoneBtn')?.addEventListener('click', () => {
+                document.getElementById('savePhoneBtn')?.addEventListener('click', async () => {
                     const phone = document.getElementById('phoneInput').value.trim();
                     if (phone) {
-                        saveUserData(phone);
+                        await saveUserDataToCloud(phone);
                         modal.remove();
                         resolve(true);
                     } else {
@@ -377,7 +380,7 @@
         
         // ========== Рассылка ==========
         async function sendBroadcast(message) {
-            const users = getBroadcastUsers();
+            const users = await getBroadcastUsers();
             if (users.length === 0) {
                 showToast("❌ Нет зарегистрированных пользователей", true);
                 return { success: false, count: 0 };
@@ -416,34 +419,35 @@
         }
         
         function showBroadcastModal() {
-            const users = getBroadcastUsers();
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>📢 Сделать рассылку</h3>
-                    <p>👥 Пользователей в базе: ${users.length}</p>
-                    <textarea id="broadcastMessage" placeholder="Введите текст сообщения..."></textarea>
-                    <div class="button-group">
-                        <button id="sendBroadcastBtn" style="background:#9c27b0;">📤 Отправить всем</button>
-                        <button id="closeModalBtn" style="background:#666;">Отмена</button>
+            getBroadcastUsers().then(users => {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>📢 Сделать рассылку</h3>
+                        <p>👥 Пользователей в базе: ${users.length}</p>
+                        <textarea id="broadcastMessage" placeholder="Введите текст сообщения..."></textarea>
+                        <div class="button-group">
+                            <button id="sendBroadcastBtn" style="background:#9c27b0;">📤 Отправить всем</button>
+                            <button id="closeModalBtn" style="background:#666;">Отмена</button>
+                        </div>
                     </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () => {
-                const message = document.getElementById('broadcastMessage').value;
-                if (!message.trim()) {
-                    showToast("Введите текст сообщения", true);
-                    return;
-                }
-                await sendBroadcast(message);
-                modal.remove();
-            });
-            
-            document.getElementById('closeModalBtn')?.addEventListener('click', () => {
-                modal.remove();
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () => {
+                    const message = document.getElementById('broadcastMessage').value;
+                    if (!message.trim()) {
+                        showToast("Введите текст сообщения", true);
+                        return;
+                    }
+                    await sendBroadcast(message);
+                    modal.remove();
+                });
+                
+                document.getElementById('closeModalBtn')?.addEventListener('click', () => {
+                    modal.remove();
+                });
             });
         }
         
@@ -559,7 +563,7 @@
         // ========== Админ-панель ==========
         async function renderAdminPanel() {
             await loadBookings();
-            const users = getBroadcastUsers();
+            const users = await getBroadcastUsers();
             const pendingBookings = bookings.filter(b => b.status === 'pending');
             const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
             
@@ -829,7 +833,6 @@
         
         console.log("👤 User ID:", TELEGRAM_USER_ID);
         console.log("👑 Is Admin:", IS_ADMIN);
-        console.log("📱 Phone registered:", !!userPhone);
     </script>
 </body>
 </html>
