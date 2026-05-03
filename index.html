@@ -188,6 +188,14 @@
             margin-bottom: 0;
         }
 
+        .birthday-btn {
+            background: linear-gradient(135deg, #e84545, #c92a2a);
+            color: #fff;
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
         .bonus-balance {
             font-size: 56px;
             font-weight: 800;
@@ -502,7 +510,6 @@
                         body: JSON.stringify([newUser])
                     });
                     
-                    // +300 бонусов за регистрацию
                     addBonus("⟡ Регистрация в Huqqa Lounge ⟡", 300);
                     showToast("⟡ +300 бонусов за регистрацию! ⟡");
                     
@@ -562,6 +569,86 @@
                 return deletedCount;
             } catch (error) {
                 return 0;
+            }
+        }
+        
+        // ========== ПРОВЕРКА ДНЕЙ РОЖДЕНИЙ (НОВАЯ ФУНКЦИЯ) ==========
+        async function manualBirthdayCheck() {
+            showToast("🔍 ПРОВЕРКА ДНЕЙ РОЖДЕНИЙ...");
+            
+            try {
+                const response = await fetch(USERS_API);
+                const users = await response.json();
+                
+                let found = [];
+                
+                for (const user of users) {
+                    if (!user.birthday) continue;
+                    
+                    const birthday = new Date(user.birthday);
+                    const today = new Date();
+                    const nextBirthday = new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate());
+                    if (nextBirthday < today) nextBirthday.setFullYear(today.getFullYear() + 1);
+                    const daysLeft = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysLeft === 3 || daysLeft === 2 || daysLeft === 1 || daysLeft === 0) {
+                        found.push({ ...user, daysLeft });
+                        
+                        // Проверяем, не отправляли ли уже уведомление в этом году
+                        const lastSent = user.lastNotificationSent;
+                        const currentYear = new Date().getFullYear();
+                        
+                        if (!lastSent || !lastSent.includes(currentYear.toString())) {
+                            // Отправляем поздравление пользователю
+                            const message = daysLeft === 0 
+                                ? `🎂 *С ДНЁМ РОЖДЕНИЯ, ${user.name.toUpperCase()}!* 🎂\n\nHuqqa Lounge дарит *СКИДКУ 20%* на весь счёт!\n\n🎁 *ПРОМОКОД:* BIRTHDAY20\n\nЖдём вас! ⟡`
+                                : `🎂 *ДОРОГОЙ(АЯ) ${user.name.toUpperCase()}!*\n\nЧерез ${daysLeft} дня у вас день рождения! 🎉\n\n✨ *ПРОМОКОД:* BIRTHDAY20 ✨\n\nЖдём вас! ⟡`;
+                            
+                            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: user.userId,
+                                    text: message,
+                                    parse_mode: 'Markdown'
+                                })
+                            });
+                            
+                            // Обновляем запись о последней отправке
+                            await fetch(`${USERS_API}/id/${user.id}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ lastNotificationSent: new Date().toISOString() })
+                            });
+                            
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    }
+                }
+                
+                if (found.length === 0) {
+                    showToast("🎂 В ближайшие 3 дня нет именинников");
+                } else {
+                    let message = "🎂 *БЛИЖАЙШИЕ ИМЕНИННИКИ:*\n\n";
+                    for (const u of found) {
+                        message += `👤 ${u.name}\n📞 ${u.phone}\n🎂 ДР через ${u.daysLeft} дн.\n\n`;
+                    }
+                    message += `🎁 Промокод: BIRTHDAY20`;
+                    
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_USER_ID,
+                            text: message,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                    showToast(`✅ Найдено ${found.length} именинников. Поздравления отправлены!`);
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+                showToast("❌ Ошибка проверки дней рождений", true);
             }
         }
         
@@ -944,7 +1031,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== Админ-панель ==========
+        // ========== Админ-панель (с кнопкой проверки дней рождений) ==========
         async function renderAdminPanel() {
             const deleted = await deleteExpiredBookings();
             if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
@@ -965,6 +1052,7 @@
                     <div class="button-group">
                         <button class="refresh-btn" id="refreshBtn">🔄 ОБНОВИТЬ</button>
                         <button class="broadcast-btn" id="broadcastBtn">📢 РАССЫЛКА</button>
+                        <button class="birthday-btn" id="birthdayCheckBtn">🎂 ПРОВЕРИТЬ ДНИ РОЖДЕНИЯ</button>
                     </div>
                     <p style="font-size:13px; margin-top:12px; opacity:0.7;">👥 Пользователей: ${users.length} | 📊 Броней: ${activeBookings.length}</p>
                 </div>
@@ -1021,6 +1109,7 @@
             
             document.getElementById('refreshBtn')?.addEventListener('click', () => renderAdminPanel());
             document.getElementById('broadcastBtn')?.addEventListener('click', () => showBroadcastModal());
+            document.getElementById('birthdayCheckBtn')?.addEventListener('click', () => manualBirthdayCheck());
             
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
