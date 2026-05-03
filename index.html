@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Huqqa Restaurant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding-bottom: 70px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-top: env(safe-area-inset-top, 16px);
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid var(--tg-theme-hint-color, #ccc);
+            z-index: 1000;
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+
+        .tab.active {
+            color: var(--tg-theme-button-color, #31b545);
+        }
+
+        .tab-icon {
+            font-size: 24px;
+        }
+
+        .card, .menu-item, .promo-card, .booking-item {
+            background: var(--tg-theme-secondary-bg-color, #f8f8f8);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        button, input, select {
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #ddd);
+            background: var(--tg-theme-bg-color, white);
+            color: var(--tg-theme-text-color, black);
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        button {
+            background: var(--tg-theme-button-color, #31b545);
+            color: var(--tg-theme-button-text-color, white);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .bonus-balance {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            background: linear-gradient(135deg, gold, orange);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .loyalty-badge {
+            text-align: center;
+            padding: 8px;
+            border-radius: 20px;
+            background: var(--tg-theme-button-color, #31b545);
+            color: white;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 2000;
+            animation: fadeInOut 2s ease;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        .restaurant-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .restaurant-header h1 {
+            font-size: 28px;
+            color: var(--tg-theme-button-color, #31b545);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app"></div>
+
+    <div class="tab-bar">
+        <button class="tab" data-tab="booking">📅<span>Стол</span></button>
+        <button class="tab" data-tab="menu">📖<span>Меню</span></button>
+        <button class="tab" data-tab="bonus">🎁<span>Бонусы</span></button>
+        <button class="tab" data-tab="promo">🔥<span>Акции</span></button>
+        <button class="tab" data-tab="contacts">📞<span>Контакты</span></button>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // --- Инициализация Telegram WebApp ---
+        let tg = window.Telegram?.WebApp;
+        if (!tg || !tg.initDataUnsafe?.user?.id) {
+            // Фейковый ID для теста без Telegram
+            tg = {
+                initDataUnsafe: { user: { id: Math.floor(Math.random() * 1000000), first_name: "Гость", username: "guest" } },
+                ready: () => {},
+                expand: () => {},
+                close: () => {},
+                HapticFeedback: { impactOccurred: () => {} },
+                themeParams: { bg_color: "#ffffff", text_color: "#000000", button_color: "#31b545" }
+            };
+        }
+        
+        tg.expand();
+        tg.ready();
+        document.body.style.background = tg.themeParams.bg_color || '#ffffff';
+        
+        // Глобальные переменные
+        const TELEGRAM_USER_ID = tg.initDataUnsafe.user.id;
+        const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
+        
+        // Хранилище данных (localStorage вместо базы данных)
+        let appData = {
+            bookings: [],
+            bonuses: {},
+            bonusHistory: {},
+            menu: [
+                { id: 1, name: "🥗 Цезарь с креветками", desc: "Салат, креветки, пармезан, соус Цезарь", price: 590, category: "Салаты" },
+                { id: 2, name: "🍲 Борщ с пампушками", desc: "Классический украинский борщ, сметана, пампушки с чесноком", price: 390, category: "Супы" },
+                { id: 3, name: "🥩 Рибай стейк", desc: "Мраморная говядина, соус демиглас, овощи гриль", price: 1890, category: "Горячее" },
+                { id: 4, name: "🍕 Маргарита", desc: "Томатный соус, моцарелла, базилик", price: 650, category: "Пицца" },
+                { id: 5, name: "🍣 Филадельфия", desc: "Лосось, сливочный сыр, огурец", price: 750, category: "Роллы" },
+                { id: 6, name: "🥤 Домашний лимонад", desc: "Имбирь, мята, лайм, мед", price: 250, category: "Напитки" }
+            ],
+            promos: [
+                { id: 1, name: "🎉 Welcome бонус", desc: "Скидка 20% на первый заказ", discount: 20, code: "WELCOME20" },
+                { id: 2, name: "🍺 Счастливый час", desc: "Скидка 15% на напитки с 15:00 до 17:00", discount: 15, code: "HAPPY15" },
+                { id: 3, name: "🎂 День рождения", desc: "Именинникам скидка 25% + десерт в подарок", discount: 25, code: "BIRTHDAY25" }
+            ]
+        };
+        
+        // Загрузка сохраненных данных из localStorage
+        function loadData() {
+            const saved = localStorage.getItem(`huqqa_${TELEGRAM_USER_ID}`);
+            if (saved) {
+                const userData = JSON.parse(saved);
+                appData.bookings = userData.bookings || [];
+                appData.bonuses[TELEGRAM_USER_ID] = userData.bonusBalance || 100;
+                appData.bonusHistory[TELEGRAM_USER_ID] = userData.bonusHistory || [];
+            }
+            
+            // Инициализация бонусов для нового пользователя
+            if (!appData.bonuses[TELEGRAM_USER_ID]) {
+                appData.bonuses[TELEGRAM_USER_ID] = 100;
+                appData.bonusHistory[TELEGRAM_USER_ID] = [];
+                addBonusHistory("Регистрация", 100);
+            }
+        }
+        
+        // Сохранение данных
+        function saveData() {
+            const userData = {
+                bookings: appData.bookings,
+                bonusBalance: appData.bonuses[TELEGRAM_USER_ID],
+                bonusHistory: appData.bonusHistory[TELEGRAM_USER_ID]
+            };
+            localStorage.setItem(`huqqa_${TELEGRAM_USER_ID}`, JSON.stringify(userData));
+        }
+        
+        // Добавление бонусов
+        function addBonus(reason, amount) {
+            appData.bonuses[TELEGRAM_USER_ID] += amount;
+            addBonusHistory(reason, amount);
+            saveData();
+        }
+        
+        // История бонусов
+        function addBonusHistory(reason, amount) {
+            const history = appData.bonusHistory[TELEGRAM_USER_ID];
+            history.unshift({
+                date: new Date().toLocaleString(),
+                reason: reason,
+                amount: amount
+            });
+            // Оставляем только последние 10 записей
+            if (history.length > 10) history.pop();
+        }
+        
+        // Показать уведомление
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.style.background = isError ? 'rgba(220, 50, 50, 0.95)' : 'rgba(0,0,0,0.85)';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        }
+        
+        // --- Отрисовка вкладок ---
+        
+        // 1. Бронирование стола
+        function renderBooking() {
+            const myBookings = appData.bookings.filter(b => b.userId === TELEGRAM_USER_ID);
+            
+            const html = `
+                <div class="restaurant-header">
+                    <h1>🍽️ Huqqa Restaurant</h1>
+                    <p>Забронируй стол и получи +50 бонусов</p>
+                </div>
+                <div class="card">
+                    <input type="text" id="name" placeholder="Ваше имя" value="${TELEGRAM_USER_NAME}">
+                    <input type="tel" id="phone" placeholder="Телефон" required>
+                    <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
+                    <input type="time" id="time">
+                    <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
+                    <button id="submitBookingBtn">✅ Забронировать (+50 бонусов)</button>
+                </div>
+                <h3>📋 Мои бронирования</h3>
+                ${myBookings.length === 0 ? '<p>Пока нет броней</p>' : 
+                    myBookings.map(b => `
+                        <div class="booking-item">
+                            <strong>${b.date} в ${b.time}</strong><br>
+                            Гостей: ${b.guests} | Статус: ${b.status === 'pending' ? '⏳ Ожидает' : '✅ Подтверждено'}
+                        </div>
+                    `).join('')
+                }
+            `;
+            document.getElementById('app').innerHTML = html;
+            
+            document.getElementById('submitBookingBtn')?.addEventListener('click', () => {
+                const phone = document.getElementById('phone').value;
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                const guests = parseInt(document.getElementById('guests').value);
+                
+                if (!phone || !date || !time) {
+                    showToast('Заполните телефон, дату и время', true);
+                    return;
+                }
+                
+                const newBooking = {
+                    id: Date.now(),
+                    userId: TELEGRAM_USER_ID,
+                    name: TELEGRAM_USER_NAME,
+                    phone: phone,
+                    date: date,
+                    time: time,
+                    guests: guests,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                };
+                
+                appData.bookings.push(newBooking);
+                addBonus(`Бронь стола на ${date} ${time}`, 50);
+                saveData();
+                showToast(`✅ Стол забронирован! +50 бонусов`);
+                setTimeout(() => renderBooking(), 1000);
+            });
+        }
+        
+        // 2. Меню
+        function renderMenu() {
+            const categories = [...new Set(appData.menu.map(item => item.category))];
+            let html = `<h2>📖 Наше меню</h2>`;
+            
+            categories.forEach(cat => {
+                html += `<h3>${cat}</h3>`;
+                const items = appData.menu.filter(item => item.category === cat);
+                items.forEach(item => {
+                    html += `
+                        <div class="menu-item">
+                            <strong>${item.name}</strong> — ${item.price} ₽<br>
+                            <small>${item.desc}</small><br>
+                            <button class="likeBtn" data-id="${item.id}" data-name="${item.name}">❤️ Лайк (+5 бонусов)</button>
+                        </div>
+                    `;
+                });
+            });
+            
+            document.getElementById('app').innerHTML = html;
+            
+            document.querySelectorAll('.likeBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemName = e.target.dataset.name;
+                    addBonus(`Лайк блюда: ${itemName}`, 5);
+                    showToast(`❤️ Спасибо за лайк! +5 бонусов`);
+                    e.target.disabled = true;
+                    e.target.textContent = '✓ Лайкнут';
+                    saveData();
+                });
+            });
+        }
+        
+        // 3. Бонусы + уровень лояльности
+        function renderBonus() {
+            const balance = appData.bonuses[TELEGRAM_USER_ID] || 0;
+            const bookingsCount = appData.bookings.filter(b => b.userId === TELEGRAM_USER_ID).length;
+            const loyaltyLevel = bookingsCount >= 3 ? '🥇 Постоянный гость (кешбэк 10%)' : '⭐ Новый гость (кешбэк 5%)';
+            const history = appData.bonusHistory[TELEGRAM_USER_ID] || [];
+            
+            const html = `
+                <h2>🎁 Моя лояльность</h2>
+                <div class="loyalty-badge">${loyaltyLevel}</div>
+                <div class="bonus-balance">${balance} бонусов</div>
+                <div class="card">
+                    <h3>📜 История операций</h3>
+                    ${history.length === 0 ? '<p>Пока нет операций</p>' :
+                        history.map(h => `<div>${h.date} — +${h.amount} (${h.reason})</div>`).join('')
+                    }
+                </div>
+                <div class="card">
+                    <h3>💰 Как потратить бонусы?</h3>
+                    <p>100 бонусов = 50₽ скидка при оплате счета. Покажите этот экран официанту.</p>
+                    <p><small>Ваш ID: ${TELEGRAM_USER_ID}</small></p>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+        }
+        
+        // 4. Акции
+        function renderPromo() {
+            const html = `
+                <h2>🔥 Акции и скидки</h2>
+                ${appData.promos.map(p => `
+                    <div class="promo-card">
+                        <strong>${p.name}</strong> — скидка ${p.discount}%<br>
+                        ${p.desc}<br>
+                        <button class="copyPromoBtn" data-code="${p.code}">📋 Скопировать код: ${p.code}</button>
+                    </div>
+                `).join('')}
+                <div class="card">
+                    <h3>💡 Как использовать?</h3>
+                    <p>Скопируй промокод и назови его официанту при заказе.</p>
+                </div>
+            `;
+            document.getElementById('app').innerHTML = html;
+            
+            document.querySelectorAll('.copyPromoBtn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.dataset.code;
+                    navigator.clipboard.writeText(code);
+                    showToast(`✅ Промокод ${code} скопирован`);
+                });
+            });
+        }
+        
+        // 5. Контакты
+        function renderContacts() {
+            const html = `
+                <h2>📞 Контакты</h2>
+                <div class="card">
+                    <p>📍 ул. Тверская, д. 15, Москва</p>
+                    <p>📞 <a href="tel:+74951234567" style="color: var(--tg-theme-link-color)">+7 (495) 123-45-67</a></p>
+                    <p>🕒 Ежедневно: 12:00 – 23:00</p>
+                    <p>📧 info@huqqa.ru</p>
+                    <button id="shareContactBtn">📱 Поделиться моим номером</button>
+                </div>
+                <iframe width="100%" height="250" frameborder="0" style="border-radius:16px" 
+                    src="https://yandex.ru/map-widget/v1/?ll=37.617698,55.755864&z=15"></iframe>
+            `;
+            document.getElementById('app').innerHTML = html;
+            
+            document.getElementById('shareContactBtn')?.addEventListener('click', () => {
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                showToast(`Ваш номер передан ресторану`);
+            });
+        }
+        
+        // --- Главный рендер по вкладке ---
+        let currentTab = "booking";
+        
+        async function renderCurrentTab() {
+            if (currentTab === 'booking') renderBooking();
+            else if (currentTab === 'menu') renderMenu();
+            else if (currentTab === 'bonus') renderBonus();
+            else if (currentTab === 'promo') renderPromo();
+            else if (currentTab === 'contacts') renderContacts();
+        }
+        
+        // --- Обработка нажатий на табы ---
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentTab = tab.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderCurrentTab();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            });
+        });
+        
+        // --- Запуск ---
+        loadData();
+        document.querySelector('.tab').classList.add('active');
+        renderCurrentTab();
+    </script>
+</body>
+</html>
