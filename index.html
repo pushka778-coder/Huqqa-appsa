@@ -474,7 +474,7 @@
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
         const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // ========== Регистрация с датой рождения ==========
+        // ========== Регистрация ==========
         let userPhone = null;
         let userBirthday = null;
         let isRegistered = false;
@@ -572,7 +572,7 @@
             }
         }
         
-        // ========== ПРОВЕРКА ДНЕЙ РОЖДЕНИЙ (НОВАЯ ФУНКЦИЯ) ==========
+        // ========== ПРОВЕРКА ДНЕЙ РОЖДЕНИЙ (ЗА 7 ДНЕЙ) ==========
         async function manualBirthdayCheck() {
             showToast("🔍 ПРОВЕРКА ДНЕЙ РОЖДЕНИЙ...");
             
@@ -591,18 +591,20 @@
                     if (nextBirthday < today) nextBirthday.setFullYear(today.getFullYear() + 1);
                     const daysLeft = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
                     
-                    if (daysLeft === 3 || daysLeft === 2 || daysLeft === 1 || daysLeft === 0) {
+                    // ПРОВЕРКА ЗА 7 ДНЕЙ (вместо 3)
+                    if (daysLeft <= 7 && daysLeft >= 0) {
                         found.push({ ...user, daysLeft });
                         
-                        // Проверяем, не отправляли ли уже уведомление в этом году
                         const lastSent = user.lastNotificationSent;
                         const currentYear = new Date().getFullYear();
                         
                         if (!lastSent || !lastSent.includes(currentYear.toString())) {
-                            // Отправляем поздравление пользователю
-                            const message = daysLeft === 0 
-                                ? `🎂 *С ДНЁМ РОЖДЕНИЯ, ${user.name.toUpperCase()}!* 🎂\n\nHuqqa Lounge дарит *СКИДКУ 20%* на весь счёт!\n\n🎁 *ПРОМОКОД:* BIRTHDAY20\n\nЖдём вас! ⟡`
-                                : `🎂 *ДОРОГОЙ(АЯ) ${user.name.toUpperCase()}!*\n\nЧерез ${daysLeft} дня у вас день рождения! 🎉\n\n✨ *ПРОМОКОД:* BIRTHDAY20 ✨\n\nЖдём вас! ⟡`;
+                            let message = '';
+                            if (daysLeft === 0) {
+                                message = `🎂 *С ДНЁМ РОЖДЕНИЯ, ${user.name.toUpperCase()}!* 🎂\n\nHuqqa Lounge дарит *СКИДКУ 20%* на весь счёт!\n\n🎁 *ПРОМОКОД:* BIRTHDAY20\n\nЖдём вас! ⟡`;
+                            } else {
+                                message = `🎂 *ДОРОГОЙ(АЯ) ${user.name.toUpperCase()}!*\n\nЧерез ${daysLeft} ${getDayWord(daysLeft)} у вас день рождения! 🎉\n\n✨ *ПРОМОКОД:* BIRTHDAY20 ✨\n\nЖдём вас! ⟡`;
+                            }
                             
                             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                                 method: 'POST',
@@ -614,7 +616,6 @@
                                 })
                             });
                             
-                            // Обновляем запись о последней отправке
                             await fetch(`${USERS_API}/id/${user.id}`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
@@ -626,10 +627,16 @@
                     }
                 }
                 
+                function getDayWord(days) {
+                    if (days === 1) return 'день';
+                    if (days >= 2 && days <= 4) return 'дня';
+                    return 'дней';
+                }
+                
                 if (found.length === 0) {
-                    showToast("🎂 В ближайшие 3 дня нет именинников");
+                    showToast("🎂 В ближайшие 7 дней нет именинников");
                 } else {
-                    let message = "🎂 *БЛИЖАЙШИЕ ИМЕНИННИКИ:*\n\n";
+                    let message = "🎂 *БЛИЖАЙШИЕ ИМЕНИННИКИ (7 ДНЕЙ):*\n\n";
                     for (const u of found) {
                         message += `👤 ${u.name}\n📞 ${u.phone}\n🎂 ДР через ${u.daysLeft} дн.\n\n`;
                     }
@@ -1031,7 +1038,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== Админ-панель (с кнопкой проверки дней рождений) ==========
+        // ========== Админ-панель ==========
         async function renderAdminPanel() {
             const deleted = await deleteExpiredBookings();
             if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
@@ -1047,12 +1054,13 @@
                     <div class="admin-panel">ВОШЛИ КАК АДМИНИСТРАТОР</div>
                     <div class="delete-mode-indicator">
                         🗑️ Брони удаляются через 24 часа после времени брони<br>
-                        ✏️ Редактируйте и управляйте бронями
+                        ✏️ Редактируйте и управляйте бронями<br>
+                        🎂 Проверка дней рождений за 7 дней
                     </div>
                     <div class="button-group">
                         <button class="refresh-btn" id="refreshBtn">🔄 ОБНОВИТЬ</button>
                         <button class="broadcast-btn" id="broadcastBtn">📢 РАССЫЛКА</button>
-                        <button class="birthday-btn" id="birthdayCheckBtn">🎂 ПРОВЕРИТЬ ДНИ РОЖДЕНИЯ</button>
+                        <button class="birthday-btn" id="birthdayCheckBtn">🎂 ПРОВЕРИТЬ ДНИ РОЖДЕНИЯ (7 ДНЕЙ)</button>
                     </div>
                     <p style="font-size:13px; margin-top:12px; opacity:0.7;">👥 Пользователей: ${users.length} | 📊 Броней: ${activeBookings.length}</p>
                 </div>
