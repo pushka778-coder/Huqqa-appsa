@@ -422,6 +422,38 @@
             }
         }
         
+        // ========== ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ==========
+        async function sendNotificationToAdmins(booking) {
+            const adminIds = ADMIN_IDS;
+            const message = `🆕 *НОВАЯ БРОНЬ В HUQQA LOUNGE!*\n\n` +
+                `👤 *Имя:* ${booking.name}\n` +
+                `📞 *Телефон:* ${booking.phone}\n` +
+                `📅 *Дата:* ${booking.date}\n` +
+                `⏰ *Время:* ${booking.time}\n` +
+                `👥 *Гостей:* ${booking.guests}\n` +
+                `🆔 *TG ID:* ${booking.userId}\n\n` +
+                `_Для подтверждения зайдите в админ-панель_`;
+            
+            let successCount = 0;
+            for (const adminId of adminIds) {
+                try {
+                    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: adminId,
+                            text: message,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                    if (response.ok) successCount++;
+                } catch (error) {
+                    console.error("Ошибка отправки уведомления админу:", error);
+                }
+            }
+            return successCount;
+        }
+        
         // ========== РЕДАКТИРОВАНИЕ БРОНИ ==========
         function showEditBookingModal(booking) {
             const modal = document.createElement('div');
@@ -613,15 +645,13 @@
         // ========== Данные приложения ==========
         let bookings = [];
         
-        // Новое меню
+        // Меню (новое)
         const menuItems = [
-            // Кальяны
             { name: "Бизнес кальян (По будням с 12:00 - 17:00)", price: 1500, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Кальян на классической чаше", price: 1700, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Премиум кальян с сигарным листом", price: 1900, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Авторский кальян на цитрусовый (Апельсин, Грейпфрут)", price: 2500, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Кальян на фруктах (Грейпфрут/Гранат/Апельсин)", price: 2000, category: "Кальяны", subcategory: "Кальяны" },
-            // Холодные напитки
             { name: "Энергетик Adrinaline Rush", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
             { name: "Энергетик RedBull", price: 300, category: "Напитки", subcategory: "Холодные напитки" },
             { name: "Coca Cola Original", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
@@ -634,7 +664,6 @@
             { name: "Лимонад Star Bar Craft (Японская груша/Черника-Лаванда/Малина-Имбирь/Грейпфрут-Малина)", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
             { name: "Лимонад Borjomi (Цитрус/Мандарин/Тархун/Груша)", price: 350, category: "Напитки", subcategory: "Холодные напитки" },
             { name: "Соки Rich (Апельсин/Яблоко/Томат/Вишня/Манго/Персик)", price: 250, category: "Напитки", subcategory: "Холодные напитки" },
-            // Лимонады
             { name: "Графин 1л (В ассортименте)", price: 1300, category: "Напитки", subcategory: "Лимонады" },
             { name: "Манго - Маракуйя (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
             { name: "Мохито (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
@@ -642,12 +671,10 @@
             { name: "Цитрусовый (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
             { name: "Ягодный (350мл)", price: 400, category: "Напитки", subcategory: "Лимонады" },
             { name: "Компот 1л (Айва/Белая черешня/Вишня/Фейхоа)", price: 700, category: "Напитки", subcategory: "Лимонады" },
-            // Пиво
             { name: "Пиво Корона Экстра", price: 400, category: "Напитки", subcategory: "Пиво" },
             { name: "Пиво Стелла Артуа", price: 300, category: "Напитки", subcategory: "Пиво" },
             { name: "Пиво Стелла Артуа без алк.", price: 300, category: "Напитки", subcategory: "Пиво" },
             { name: "Пиво Хугарден (Классическое/Вишня/Грейпфрут)", price: 300, category: "Напитки", subcategory: "Пиво" },
-            // Чаи
             { name: "Авторский Банановый Улун", price: 600, category: "Чаи", subcategory: "Чаи" },
             { name: "Авторский Ваниль/Корица/Яблоко", price: 600, category: "Чаи", subcategory: "Чаи" },
             { name: "Авторский Малина/Имбирь/Мёд", price: 600, category: "Чаи", subcategory: "Чаи" },
@@ -659,7 +686,6 @@
             { name: "Облепиховый с Мёдом", price: 350, category: "Чаи", subcategory: "Чаи" },
             { name: "Черный Бергамот", price: 300, category: "Чаи", subcategory: "Чаи" },
             { name: "Зеленый с Жасмином", price: 300, category: "Чаи", subcategory: "Чаи" },
-            // Кофе
             { name: "Эспрессо", price: 150, category: "Кофе", subcategory: "Кофе" },
             { name: "Американо", price: 200, category: "Кофе", subcategory: "Кофе" },
             { name: "Капучино", price: 300, category: "Кофе", subcategory: "Кофе" },
@@ -667,17 +693,14 @@
             { name: "Бамбл", price: 350, category: "Кофе", subcategory: "Кофе" },
             { name: "Фраппе Баунти", price: 350, category: "Кофе", subcategory: "Кофе" },
             { name: "Эспрессо Тоник с Лаймом", price: 350, category: "Кофе", subcategory: "Кофе" },
-            // Пиццы
             { name: "СуперМясная (405гр, 854ккал)", price: 1000, category: "Пиццы", subcategory: "Пиццы" },
             { name: "4 сыра (350гр, 794ккал)", price: 900, category: "Пиццы", subcategory: "Пиццы" },
             { name: "Пепперони (345гр, 570ккал)", price: 800, category: "Пиццы", subcategory: "Пиццы" },
             { name: "Ветчина - Грибы (360гр, 716ккал)", price: 800, category: "Пиццы", subcategory: "Пиццы" },
             { name: "Маргарита (340гр, 570ккал)", price: 700, category: "Пиццы", subcategory: "Пиццы" },
-            // Добавки
             { name: "Апельсин/Грейпфрут/Лимон/Яблоко", price: 150, category: "Добавки", subcategory: "Добавки" },
             { name: "Мёд 50гр", price: 100, category: "Добавки", subcategory: "Добавки" },
             { name: "Сироп 50гр", price: 100, category: "Добавки", subcategory: "Добавки" },
-            // Пробковый сбор
             { name: "Крепкое (Виски/Водка/Коньяк/Текила/Бурбон/Ром)", price: 400, category: "Пробковый сбор", subcategory: "Пробковый сбор" },
             { name: "Вино/Шампанское", price: 200, category: "Пробковый сбор", subcategory: "Пробковый сбор" },
             { name: "Пиво", price: 100, category: "Пробковый сбор", subcategory: "Пробковый сбор" }
@@ -688,7 +711,7 @@
             { id: 3, name: "🎂 День рождения", desc: "Именинникам скидка 20% на весь счёт", discount: 20, code: "BIRTHDAY20" }
         ];
         
-        let userBonuses = { balance: 100, history: [] };
+        let userBonuses = { balance: 0, history: [] };
         
         function loadBonuses() {
             const saved = localStorage.getItem(`huqqa_bonuses_${TELEGRAM_USER_ID}`);
@@ -704,7 +727,6 @@
             localStorage.setItem(`huqqa_bonuses_${TELEGRAM_USER_ID}`, JSON.stringify(userBonuses));
         }
         
-        // Функция добавления бонусов (сохранена для истории)
         function addBonus(reason, amount) {
             userBonuses.balance += amount;
             userBonuses.history.unshift({ date: new Date().toLocaleString(), reason: reason, amount: amount });
@@ -727,428 +749,4 @@
         
         async function saveBooking(booking) {
             try {
-                booking.id = Date.now().toString();
-                booking.created_at = new Date().toISOString();
-                booking.phone = userPhone || booking.phone;
-                const response = await fetch(SHEET_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify([booking])
-                });
-                if (!response.ok) throw new Error('Ошибка сохранения');
-                return booking;
-            } catch (error) {
-                showToast("Ошибка сохранения!", true);
-                return null;
-            }
-        }
-        
-        async function updateBooking(bookingId, updatedData) {
-            try {
-                const response = await fetch(`${SHEET_API}/id/${bookingId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
-                if (!response.ok) throw new Error('Ошибка обновления');
-                return true;
-            } catch (error) {
-                showToast("Ошибка обновления!", true);
-                return false;
-            }
-        }
-        
-        async function deleteBooking(bookingId) {
-            try {
-                const response = await fetch(`${SHEET_API}/id/${bookingId}`, {
-                    method: 'DELETE'
-                });
-                if (!response.ok) throw new Error('Ошибка удаления');
-                return true;
-            } catch (error) {
-                return false;
-            }
-        }
-        
-        function showToast(message, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = message;
-            toast.style.background = isError ? 'rgba(220, 50, 50, 0.95)' : 'rgba(0,0,0,0.85)';
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        }
-        
-        // ========== Админ-панель ==========
-        async function renderAdminPanel() {
-            const deleted = await deleteExpiredBookings();
-            if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
-            await loadBookings();
-            const users = await getBroadcastUsers();
-            const activeBookings = bookings.filter(b => !isBookingExpired(b));
-            const pendingBookings = activeBookings.filter(b => b.status === 'pending');
-            const confirmedBookings = activeBookings.filter(b => b.status === 'confirmed');
-            
-            let html = `
-                <div class="restaurant-header">
-                    <h1>👑 Админ-панель</h1>
-                    <div class="admin-panel">Вы вошли как администратор | ID: ${TELEGRAM_USER_ID}</div>
-                    <div class="delete-mode-indicator">
-                        🗑️ Брони удаляются автоматически через 24 часа после времени брони<br>
-                        ✏️ Нажмите "✏️ Редактировать" для изменения данных
-                    </div>
-                    <div class="button-group">
-                        <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
-                        <button class="broadcast-btn" id="broadcastBtn">📢 Сделать рассылку (текст + фото)</button>
-                    </div>
-                    <p style="font-size:12px; margin-top:5px;">👥 Зарегистрировано: ${users.length} | 📊 Активных броней: ${activeBookings.length}</p>
-                </div>
-            `;
-            
-            html += `<h2>⏳ Ожидают подтверждения (${pendingBookings.length})</h2>`;
-            if (pendingBookings.length === 0) {
-                html += `<p>✨ Нет новых броней</p>`;
-            } else {
-                pendingBookings.forEach(b => {
-                    const bookingDateTime = new Date(`${b.date}T${b.time}`);
-                    const deleteDateTime = new Date(bookingDateTime.getTime() + 24 * 60 * 60 * 1000);
-                    const deleteTimeStr = deleteDateTime.toLocaleString();
-                    html += `
-                        <div class="admin-booking" data-id="${b.id}">
-                            <strong>👤 ${b.name || 'Не указано'}</strong><br>
-                            📞 ${b.phone || 'Не указан'}<br>
-                            📅 ${b.date || '?'} в ${b.time || '?'}<br>
-                            👥 ${b.guests || 1} гостей<br>
-                            🆔 TG ID: ${b.userId || '?'}<br>
-                            <span class="status-pending">⏳ Статус: Ожидает</span><br>
-                            <small>🗑️ Удалится: ${deleteTimeStr}</small>
-                            <div class="button-group">
-                                <button class="edit-btn" data-id="${b.id}">✏️ Редактировать</button>
-                                <button class="confirm-btn" data-id="${b.id}">✅ Подтвердить</button>
-                                <button class="cancel-btn" data-id="${b.id}">❌ Удалить</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `<h2>✅ Подтверждённые брони (${confirmedBookings.length})</h2>`;
-            if (confirmedBookings.length === 0) {
-                html += `<p>Нет подтверждённых броней</p>`;
-            } else {
-                confirmedBookings.forEach(b => {
-                    const bookingDateTime = new Date(`${b.date}T${b.time}`);
-                    const deleteDateTime = new Date(bookingDateTime.getTime() + 24 * 60 * 60 * 1000);
-                    const deleteTimeStr = deleteDateTime.toLocaleString();
-                    html += `
-                        <div class="admin-booking">
-                            <strong>👤 ${b.name}</strong><br>
-                            📞 ${b.phone}<br>
-                            📅 ${b.date} в ${b.time}<br>
-                            👥 ${b.guests} гостей<br>
-                            🆔 TG ID: ${b.userId}<br>
-                            <span class="status-confirmed">✅ Статус: Подтверждено</span><br>
-                            <small>🗑️ Удалится: ${deleteTimeStr}</small>
-                            <div class="button-group">
-                                <button class="edit-btn" data-id="${b.id}">✏️ Редактировать</button>
-                                <button class="cancel-btn" data-id="${b.id}">❌ Удалить</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('app').innerHTML = html;
-            
-            document.getElementById('refreshBtn')?.addEventListener('click', () => renderAdminPanel());
-            document.getElementById('broadcastBtn')?.addEventListener('click', () => showBroadcastModal());
-            
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const bookingId = btn.dataset.id;
-                    const booking = bookings.find(b => b.id === bookingId);
-                    if (booking) showEditBookingModal(booking);
-                });
-            });
-            
-            document.querySelectorAll('.confirm-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const bookingId = btn.dataset.id;
-                    await updateBooking(bookingId, { status: 'confirmed' });
-                    showToast(`✅ Бронь подтверждена!`);
-                    renderAdminPanel();
-                });
-            });
-            
-            document.querySelectorAll('.cancel-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const bookingId = btn.dataset.id;
-                    await deleteBooking(bookingId);
-                    showToast(`❌ Бронь удалена`);
-                    renderAdminPanel();
-                });
-            });
-        }
-        
-        // ========== Бронирование ==========
-        async function renderBooking() {
-            await loadBookings();
-            const myActiveBookings = bookings.filter(b => 
-                String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b)
-            );
-            const html = `
-                <div class="restaurant-header">
-                    <h1>🏮 Huqqa Lounge</h1>
-                </div>
-                <div class="card">
-                    <input type="text" id="name" placeholder="Ваше имя" value="${TELEGRAM_USER_NAME}">
-                    <input type="tel" id="phone" placeholder="Телефон" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
-                    <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
-                    <input type="time" id="time">
-                    <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
-                    <button id="submitBookingBtn">✅ Забронировать стол</button>
-                </div>
-                <h3>📋 Мои бронирования</h3>
-                ${myActiveBookings.length === 0 ? '<p>У вас нет активных броней</p>' : 
-                    myActiveBookings.map(b => `
-                        <div class="booking-item">
-                            <strong>${b.date} в ${b.time}</strong><br>
-                            Гостей: ${b.guests} | Статус: ${b.status === 'pending' ? '<span class="status-pending">⏳ Ожидает</span>' : '<span class="status-confirmed">✅ Подтверждено</span>'}
-                        </div>
-                    `).join('')
-                }
-            `;
-            document.getElementById('app').innerHTML = html;
-            document.getElementById('submitBookingBtn')?.addEventListener('click', async () => {
-                const phone = document.getElementById('phone').value;
-                const date = document.getElementById('date').value;
-                const time = document.getElementById('time').value;
-                const guests = parseInt(document.getElementById('guests').value);
-                if (!phone || !date || !time) {
-                    showToast('Заполните телефон, дату и время', true);
-                    return;
-                }
-                const newBooking = {
-                    userId: String(TELEGRAM_USER_ID),
-                    name: TELEGRAM_USER_NAME,
-                    phone: phone,
-                    date: date,
-                    time: time,
-                    guests: guests,
-                    status: 'pending'
-                };
-                const saved = await saveBooking(newBooking);
-                if (saved) {
-                    showToast(`✅ Стол забронирован!`);
-                    setTimeout(() => renderBooking(), 1000);
-                }
-            });
-        }
-        
-        // ========== Меню (новое) ==========
-        function renderMenu() {
-            let html = `<h2>📖 Наше меню</h2>`;
-            
-            // Кальяны
-            html += `<div class="menu-category">💨 Кальяны</div>`;
-            menuItems.filter(i => i.category === "Кальяны").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            // Напитки с подкатегориями
-            html += `<div class="menu-category">🥤 Напитки</div>`;
-            const drinkSubcategories = ["Холодные напитки", "Лимонады", "Пиво"];
-            drinkSubcategories.forEach(sub => {
-                const items = menuItems.filter(i => i.subcategory === sub);
-                if (items.length > 0) {
-                    html += `<div class="menu-subcategory">${sub}</div>`;
-                    items.forEach(item => {
-                        html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-                    });
-                }
-            });
-            
-            // Чаи
-            html += `<div class="menu-category">🍵 Чаи</div>`;
-            menuItems.filter(i => i.category === "Чаи").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            // Кофе
-            html += `<div class="menu-category">☕ Кофе</div>`;
-            menuItems.filter(i => i.category === "Кофе").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            // Пиццы
-            html += `<div class="menu-category">🍕 Пиццы</div>`;
-            menuItems.filter(i => i.category === "Пиццы").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            // Добавки
-            html += `<div class="menu-category">🥄 Добавки</div>`;
-            menuItems.filter(i => i.category === "Добавки").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            // Пробковый сбор
-            html += `<div class="menu-category">🍾 Пробковый сбор</div>`;
-            html += `<div class="card"><small>Цены указаны за 1 бутылку!</small></div>`;
-            menuItems.filter(i => i.category === "Пробковый сбор").forEach(item => {
-                html += `<div class="menu-item"><strong>${item.name}</strong> — ${item.price} ₽</div>`;
-            });
-            
-            document.getElementById('app').innerHTML = html;
-        }
-        
-        // ========== Моя карта ==========
-        function renderBonus() {
-            const bookingsCount = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b)).length;
-            const html = `
-                <h2>🎁 Моя карта гостя</h2>
-                <div class="card">
-                    <h3>💰 Бонусный баланс</h3>
-                    <div class="bonus-balance">${userBonuses.balance} бонусов</div>
-                    <p>100 бонусов = 50₽ скидка</p>
-                </div>
-                <div class="card">
-                    <h3>📊 Статистика</h3>
-                    <p>📌 Активных броней: ${bookingsCount}</p>
-                    <p>🎫 Бонусы начисляются за каждое бронирование</p>
-                </div>
-                <div class="card">
-                    <h3>📜 История операций</h3>
-                    ${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : 
-                        userBonuses.history.map(h => `<div>${h.date} — +${h.amount} (${h.reason})</div>`).join('')}
-                </div>
-            `;
-            document.getElementById('app').innerHTML = html;
-        }
-        
-        // ========== Акции ==========
-        function renderPromo() {
-            const html = `
-                <h2>🔥 Акции и скидки</h2>
-                ${promos.map(p => `
-                    <div class="promo-card">
-                        <strong>${p.name}</strong> ${p.discount > 0 ? `— скидка ${p.discount}%` : ''}<br>
-                        ${p.desc}<br>
-                        <button class="copyPromoBtn" data-code="${p.code}">📋 Скопировать код: ${p.code}</button>
-                    </div>
-                `).join('')}
-                <div class="card">
-                    <h3>💡 Как использовать?</h3>
-                    <p>Скопируй промокод и назови его официанту при заказе.</p>
-                </div>
-            `;
-            document.getElementById('app').innerHTML = html;
-            document.querySelectorAll('.copyPromoBtn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    navigator.clipboard.writeText(btn.dataset.code);
-                    showToast(`✅ Промокод скопирован`);
-                });
-            });
-        }
-        
-        // ========== Контакты ==========
-        function renderContacts() {
-            const html = `
-                <h2>📞 Контакты</h2>
-                <div class="card">
-                    <p>📍 ул. Молодежная 15Б, г. Химки</p>
-                    <p>📞 <a href="tel:+79099846677">+7 (909) 984-66-77</a></p>
-                    <p>🕒 Вс-Чт: 12:00 – 02:00</p>
-                    <p>🕒 Пт-Сб: 12:00 – 03:00</p>
-                    <button id="shareContactBtn">📱 Поделиться номером</button>
-                </div>
-                <iframe width="100%" height="250" frameborder="0" style="border-radius:16px; border:none;" 
-                    src="https://yandex.ru/map-widget/v1/?ll=37.4450,55.8890&z=17&pt=37.4450,55.8890,pm2rdm&what=here&text=Молодежная%2015Б%20Химки"></iframe>
-            `;
-            document.getElementById('app').innerHTML = html;
-            document.getElementById('shareContactBtn')?.addEventListener('click', () => showToast(`Номер передан ресторану`));
-        }
-        
-        let currentTab = "booking";
-        
-        async function renderCurrentTab() {
-            if (!isRegistered) {
-                await showPhoneRegistrationModal();
-                renderCurrentTab();
-                return;
-            }
-            if (currentTab === 'admin' && IS_ADMIN) await renderAdminPanel();
-            else if (currentTab === 'booking') await renderBooking();
-            else if (currentTab === 'menu') renderMenu();
-            else if (currentTab === 'bonus') renderBonus();
-            else if (currentTab === 'promo') renderPromo();
-            else if (currentTab === 'contacts') renderContacts();
-            else await renderBooking();
-        }
-        
-        function showPhoneRegistrationModal() {
-            return new Promise((resolve) => {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3>📱 Добро пожаловать в Huqqa Lounge!</h3>
-                        <p>Пожалуйста, укажите ваш номер телефона для бронирования столов.</p>
-                        <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
-                        <div class="button-group">
-                            <button id="savePhoneBtn">✅ Сохранить</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-                document.getElementById('savePhoneBtn')?.addEventListener('click', async () => {
-                    const phone = document.getElementById('phoneInput').value.trim();
-                    if (phone) {
-                        await saveUserDataToCloud(phone);
-                        modal.remove();
-                        resolve(true);
-                    } else {
-                        showToast("Введите номер телефона", true);
-                    }
-                });
-            });
-        }
-        
-        function setupTabs() {
-            const tabBar = document.querySelector('.tab-bar');
-            if (IS_ADMIN && !document.querySelector('.tab[data-tab="admin"]')) {
-                const adminTab = document.createElement('button');
-                adminTab.className = 'tab';
-                adminTab.setAttribute('data-tab', 'admin');
-                adminTab.innerHTML = '👑<span>Админ</span>';
-                tabBar.appendChild(adminTab);
-            }
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    currentTab = tab.dataset.tab;
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    renderCurrentTab();
-                });
-            });
-        }
-        
-        loadUserData();
-        loadBonuses();
-        setupTabs();
-        document.querySelector('.tab').classList.add('active');
-        renderCurrentTab();
-        
-        setInterval(async () => {
-            if (IS_ADMIN && currentTab === 'admin') {
-                const deleted = await deleteExpiredBookings();
-                if (deleted > 0) renderAdminPanel();
-            }
-        }, 5 * 60 * 1000);
-        
-        console.log("👤 User ID:", TELEGRAM_USER_ID);
-        console.log("👑 Is Admin:", IS_ADMIN);
-    </script>
-</body>
-</html>
+                booking.id = Date.now
