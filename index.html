@@ -269,9 +269,6 @@
         const USERS_API = "https://api.sheetbest.com/sheets/912a1d92-a006-4a4c-9085-7d6f3722e453";
         const ADMIN_IDS = [755574601];
         const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
-        
-        // 🔑 API КЛЮЧ IMGBB (твой ключ вставлен!)
-        const IMGBB_API_KEY = "a2f892d2edc599bcfde74d5a53c07740";
         // ===================================================
         
         let tg = window.Telegram?.WebApp;
@@ -357,46 +354,24 @@
             }
         }
         
-        // ========== РАССЫЛКА С ТЕКСТОМ И ФОТО ==========
+        // ========== РАССЫЛКА С ФОТО (ПРЯМО В TELEGRAM) ==========
         
-        // Загрузка изображения на imgbb
-        async function uploadImageToImgBB(imageFile) {
-            const formData = new FormData();
-            formData.append('image', imageFile);
-            
+        // Отправка сообщения с фото напрямую через Telegram Bot API (без сторонних хостингов)
+        async function sendPhotoMessage(chatId, caption, imageFile) {
             try {
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', imageFile);
+                formData.append('caption', `📢 *НОВОСТЬ ОТ РЕСТОРАНА HUQQA*\n\n${caption}\n\n— Администрация Huqqa`);
+                formData.append('parse_mode', 'Markdown');
+                
+                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
-                if (data.success) {
-                    return data.data.url;
-                } else {
-                    console.error("Ошибка imgbb:", data);
-                    return null;
-                }
-            } catch (error) {
-                console.error("Ошибка загрузки изображения:", error);
-                return null;
-            }
-        }
-        
-        // Отправка сообщения с фото (через Telegram Bot API)
-        async function sendPhotoMessage(chatId, caption, photoUrl) {
-            try {
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: chatId,
-                        photo: photoUrl,
-                        caption: `📢 *НОВОСТЬ ОТ РЕСТОРАНА HUQQA*\n\n${caption}\n\n— Администрация Huqqa`,
-                        parse_mode: 'Markdown'
-                    })
-                });
                 return response.ok;
             } catch (error) {
+                console.error("Ошибка отправки фото:", error);
                 return false;
             }
         }
@@ -426,15 +401,6 @@
                 return { success: false, count: 0 };
             }
             
-            let photoUrl = null;
-            if (imageFile) {
-                showToast(`📤 Загрузка изображения...`);
-                photoUrl = await uploadImageToImgBB(imageFile);
-                if (!photoUrl) {
-                    showToast("❌ Ошибка загрузки изображения, отправляю только текст", true);
-                }
-            }
-            
             let successCount = 0;
             let failCount = 0;
             
@@ -442,8 +408,9 @@
             
             for (const user of users) {
                 let sent = false;
-                if (photoUrl) {
-                    sent = await sendPhotoMessage(user.userId, message, photoUrl);
+                if (imageFile) {
+                    // Отправляем с фото напрямую
+                    sent = await sendPhotoMessage(user.userId, message, imageFile);
                 } else {
                     sent = await sendTextMessage(user.userId, message);
                 }
@@ -516,7 +483,16 @@
                         return;
                     }
                     
+                    // Показываем индикатор отправки
+                    const sendBtn = document.getElementById('sendBroadcastBtn');
+                    const originalText = sendBtn.textContent;
+                    sendBtn.textContent = "⏳ Отправка...";
+                    sendBtn.disabled = true;
+                    
                     await sendBroadcast(message, selectedImage);
+                    
+                    sendBtn.textContent = originalText;
+                    sendBtn.disabled = false;
                     modal.remove();
                 });
                 
