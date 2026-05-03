@@ -5,22 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Huqqa Lounge | Премиум лаунж</title>
     <style>
-        /* Все стили остаются такими же, как в предыдущей версии */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Все стили остаются как в предыдущей версии */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #0a0a0c;
             color: #ffffff;
             padding-bottom: 70px;
         }
-
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
-
         body::before {
             content: '';
             position: fixed;
@@ -32,298 +25,87 @@
             pointer-events: none;
             z-index: -1;
         }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            padding-top: env(safe-area-inset-top, 20px);
-        }
-
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-top: env(safe-area-inset-top, 20px); }
         .tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(8, 8, 10, 0.95);
-            backdrop-filter: blur(20px);
-            display: flex;
-            justify-content: space-around;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(8, 8, 10, 0.95); backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around;
             padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
             border-top: 1px solid rgba(220, 40, 40, 0.3);
             z-index: 1000;
         }
-
         .tab {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            font-size: 11px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.45);
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 24px;
-            transition: all 0.25s ease;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            background: none; border: none; font-size: 11px; font-weight: 500;
+            color: rgba(255, 255, 255, 0.45); cursor: pointer; padding: 8px 12px;
+            border-radius: 24px; transition: all 0.25s ease;
         }
-
-        .tab.active {
-            color: #e84545;
-            background: rgba(232, 69, 69, 0.12);
-        }
-
+        .tab.active { color: #e84545; background: rgba(232, 69, 69, 0.12); }
         .card, .menu-item, .promo-card, .booking-item, .admin-booking, .booking-card {
             background: linear-gradient(135deg, rgba(18, 18, 22, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid rgba(232, 69, 69, 0.25);
-            transition: all 0.3s ease;
+            border-radius: 24px; padding: 20px; margin-bottom: 16px;
+            border: 1px solid rgba(232, 69, 69, 0.25); transition: all 0.3s ease;
         }
-
-        .card:hover, .menu-item:hover {
-            transform: translateY(-3px);
-            border-color: rgba(232, 69, 69, 0.6);
-        }
-
+        .card:hover, .menu-item:hover { transform: translateY(-3px); border-color: rgba(232, 69, 69, 0.6); }
         input, select, textarea {
-            font-size: 16px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1.5px solid rgba(232, 69, 69, 0.2);
-            background: rgba(5, 5, 7, 0.9);
-            color: #ffffff;
-            width: 100%;
-            margin-bottom: 14px;
+            font-size: 16px; padding: 14px 16px; border-radius: 16px;
+            border: 1.5px solid rgba(232, 69, 69, 0.2); background: rgba(5, 5, 7, 0.9);
+            color: #ffffff; width: 100%; margin-bottom: 14px;
         }
-
-        input:focus {
-            outline: none;
-            border-color: #e84545;
-            box-shadow: 0 0 0 3px rgba(232, 69, 69, 0.2);
-        }
-
+        input:focus { outline: none; border-color: #e84545; box-shadow: 0 0 0 3px rgba(232, 69, 69, 0.2); }
         button {
             background: linear-gradient(135deg, #e84545 0%, #c92a2a 100%);
-            color: #ffffff;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 14px 20px;
-            border-radius: 16px;
-            width: 100%;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
+            color: #ffffff; border: none; font-weight: 600; cursor: pointer;
+            font-size: 16px; padding: 14px 20px; border-radius: 16px;
+            width: 100%; margin-bottom: 12px; transition: all 0.2s ease;
         }
-
-        button:hover {
-            transform: scale(0.98);
-            box-shadow: 0 8px 24px rgba(232, 69, 69, 0.35);
-        }
-
-        .confirm-btn {
-            background: linear-gradient(135deg, #2d8a4e, #1e6b3b);
-            width: auto;
-            padding: 8px 18px;
-            margin-right: 8px;
-        }
-
-        .cancel-btn {
-            background: linear-gradient(135deg, #dc3545, #a71d2a);
-            width: auto;
-            padding: 8px 18px;
-        }
-
-        .edit-btn {
-            background: linear-gradient(135deg, #2d6a9f, #1e4d73);
-            width: auto;
-            padding: 8px 18px;
-            margin-right: 8px;
-        }
-
-        .broadcast-btn, .refresh-btn, .birthday-btn {
-            width: auto;
-            padding: 10px 20px;
-            margin-bottom: 0;
-        }
-
+        button:hover { transform: scale(0.98); box-shadow: 0 8px 24px rgba(232, 69, 69, 0.35); }
+        .confirm-btn { background: linear-gradient(135deg, #2d8a4e, #1e6b3b); width: auto; padding: 8px 18px; margin-right: 8px; }
+        .cancel-btn { background: linear-gradient(135deg, #dc3545, #a71d2a); width: auto; padding: 8px 18px; }
+        .edit-btn { background: linear-gradient(135deg, #2d6a9f, #1e4d73); width: auto; padding: 8px 18px; margin-right: 8px; }
+        .broadcast-btn, .refresh-btn, .birthday-btn { width: auto; padding: 10px 20px; margin-bottom: 0; }
         .broadcast-btn { background: linear-gradient(135deg, #8b2c9d, #6b1f7a); }
         .refresh-btn { background: linear-gradient(135deg, #3a3a45, #2a2a32); }
         .birthday-btn { background: linear-gradient(135deg, #e84545, #c92a2a); }
-
-        .delete-user-btn {
-            background: linear-gradient(135deg, #dc3545, #a71d2a);
-            width: auto;
-            padding: 8px 18px;
-            font-size: 13px;
-        }
-
-        .bonus-balance {
-            font-size: 56px;
-            font-weight: 800;
-            text-align: center;
-            margin: 20px 0;
-            background: linear-gradient(135deg, #ff6b6b, #e84545);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .restaurant-header h1 {
-            font-size: 34px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff, #e84545);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 8px;
-        }
-
-        h2 {
-            font-size: 22px;
-            font-weight: 600;
-            margin: 20px 0 16px 0;
-            border-left: 3px solid #e84545;
-            padding-left: 12px;
-        }
-
-        h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #e84545;
-        }
-
-        .menu-category {
-            font-size: 20px;
-            font-weight: 700;
-            margin: 24px 0 14px 0;
-            padding-bottom: 8px;
-            border-bottom: 2px solid rgba(232, 69, 69, 0.5);
-        }
-
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            padding: 12px 16px;
-        }
-
-        .menu-item span {
-            font-weight: 600;
-            color: #e84545;
-            background: rgba(232, 69, 69, 0.12);
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        .status-pending {
-            color: #e84545;
-            background: rgba(232, 69, 69, 0.15);
-            padding: 4px 12px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        .status-confirmed {
-            color: #2d8a4e;
-            background: rgba(45, 138, 78, 0.15);
-            padding: 4px 12px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
+        .delete-user-btn { background: linear-gradient(135deg, #dc3545, #a71d2a); width: auto; padding: 8px 18px; }
+        .reset-btn { background: linear-gradient(135deg, #ff9800, #f57c00); width: auto; padding: 8px 12px; margin-right: 8px; font-size: 12px; }
+        .bonus-balance { font-size: 56px; font-weight: 800; text-align: center; margin: 20px 0; background: linear-gradient(135deg, #ff6b6b, #e84545); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .restaurant-header h1 { font-size: 34px; font-weight: 800; background: linear-gradient(135deg, #ffffff, #e84545); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 8px; }
+        h2 { font-size: 22px; font-weight: 600; margin: 20px 0 16px 0; border-left: 3px solid #e84545; padding-left: 12px; }
+        h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #e84545; }
+        .menu-category { font-size: 20px; font-weight: 700; margin: 24px 0 14px 0; padding-bottom: 8px; border-bottom: 2px solid rgba(232, 69, 69, 0.5); }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 12px 16px; }
+        .menu-item span { font-weight: 600; color: #e84545; background: rgba(232, 69, 69, 0.12); padding: 4px 12px; border-radius: 20px; }
+        .status-pending { color: #e84545; background: rgba(232, 69, 69, 0.15); padding: 4px 12px; border-radius: 20px; display: inline-block; }
+        .status-confirmed { color: #2d8a4e; background: rgba(45, 138, 78, 0.15); padding: 4px 12px; border-radius: 20px; display: inline-block; }
         .toast {
-            position: fixed;
-            bottom: 90px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            color: #e84545;
-            padding: 14px 20px;
-            border-radius: 60px;
-            text-align: center;
-            z-index: 2000;
-            animation: fadeInOut 2.5s ease;
+            position: fixed; bottom: 90px; left: 20px; right: 20px;
+            background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px);
+            color: #e84545; padding: 14px 20px; border-radius: 60px;
+            text-align: center; z-index: 2000; animation: fadeInOut 2.5s ease;
             border: 1px solid rgba(232, 69, 69, 0.4);
         }
-
         @keyframes fadeInOut {
             0% { opacity: 0; transform: translateY(20px); }
             15% { opacity: 1; transform: translateY(0); }
             85% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-20px); }
         }
-
         .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(16px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(16px);
+            display: flex; align-items: center; justify-content: center; z-index: 3000;
         }
-
         .modal-content {
             background: linear-gradient(135deg, #121215, #0a0a0d);
-            border-radius: 32px;
-            padding: 28px;
-            width: 90%;
-            max-width: 500px;
+            border-radius: 32px; padding: 28px; width: 90%; max-width: 500px;
             border: 1px solid rgba(232, 69, 69, 0.4);
         }
-
-        .admin-panel {
-            background: linear-gradient(135deg, #e84545, #c92a2a);
-            color: #ffffff;
-            padding: 6px 14px;
-            border-radius: 60px;
-            font-size: 12px;
-            display: inline-block;
-            margin-bottom: 12px;
-        }
-
-        .delete-mode-indicator {
-            background: rgba(232, 69, 69, 0.1);
-            border: 1px solid rgba(232, 69, 69, 0.3);
-            padding: 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 6px;
-            display: block;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px;
-            color: rgba(232, 69, 69, 0.6);
-        }
+        .admin-panel { background: linear-gradient(135deg, #e84545, #c92a2a); color: #ffffff; padding: 6px 14px; border-radius: 60px; font-size: 12px; display: inline-block; margin-bottom: 12px; }
+        .delete-mode-indicator { background: rgba(232, 69, 69, 0.1); border: 1px solid rgba(232, 69, 69, 0.3); padding: 12px; border-radius: 20px; font-size: 12px; margin-bottom: 20px; text-align: center; }
+        label { font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block; color: rgba(255, 255, 255, 0.6); }
+        .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .loading { text-align: center; padding: 60px; color: rgba(232, 69, 69, 0.6); }
     </style>
 </head>
 <body>
@@ -383,6 +165,30 @@
             }
         }
         
+        async function checkForceReauth() {
+            try {
+                const response = await fetch(USERS_API);
+                const users = await response.json();
+                const user = users.find(u => String(u.userId) === String(TELEGRAM_USER_ID));
+                if (user && user.forceReauth === "true") {
+                    // Очищаем localStorage
+                    for (let key in localStorage) {
+                        if (key.startsWith('huqqa_')) localStorage.removeItem(key);
+                    }
+                    // Снимаем флаг
+                    await fetch(`${USERS_API}/id/${user.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ forceReauth: "false" })
+                    });
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                return false;
+            }
+        }
+        
         async function saveUserDataToCloud(phone, birthday) {
             try {
                 const response = await fetch(USERS_API);
@@ -396,7 +202,8 @@
                         name: TELEGRAM_USER_NAME,
                         phone: phone,
                         birthday: birthday,
-                        registeredAt: new Date().toISOString()
+                        registeredAt: new Date().toISOString(),
+                        forceReauth: "false"
                     };
                     await fetch(USERS_API, {
                         method: 'POST',
@@ -473,7 +280,7 @@
                 let found = [];
                 
                 for (const user of users) {
-                    if (!user.birthday) continue;
+                    if (!user.birthday || user.forceReauth === "true") continue;
                     const birthday = new Date(user.birthday);
                     const today = new Date();
                     const nextBirthday = new Date(today.getFullYear(), birthday.getMonth(), birthday.getDate());
@@ -524,11 +331,31 @@
             }
         }
         
+        // ========== Функция принудительной перерегистрации ==========
+        async function forceUserReauth(userId) {
+            try {
+                const response = await fetch(USERS_API);
+                const users = await response.json();
+                const user = users.find(u => String(u.userId) === String(userId));
+                if (user) {
+                    await fetch(`${USERS_API}/id/${user.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ forceReauth: "true" })
+                    });
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error("Ошибка установки флага перерегистрации:", error);
+                return false;
+            }
+        }
+        
         // ========== ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ==========
         async function sendNotificationToAdmins(booking) {
             const adminIds = ADMIN_IDS;
             const message = `🆕 *НОВАЯ БРОНЬ В HUQQA LOUNGE!*\n\n👤 *Имя:* ${booking.name}\n📞 *Телефон:* ${booking.phone}\n📅 *Дата:* ${booking.date}\n⏰ *Время:* ${booking.time}\n👥 *Гостей:* ${booking.guests}\n🆔 *TG ID:* ${booking.userId}\n\n_Для подтверждения зайдите в админ-панель_`;
-            
             for (const adminId of adminIds) {
                 try {
                     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -547,29 +374,20 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <h3>✏️ РЕДАКТИРОВАТЬ БРОНЬ</h3>
-                    <label>👤 Имя</label>
-                    <input type="text" id="editName" value="${booking.name || ''}">
-                    <label>📞 Телефон</label>
-                    <input type="tel" id="editPhone" value="${booking.phone || ''}">
-                    <label>📅 Дата</label>
-                    <input type="date" id="editDate" value="${booking.date || ''}">
-                    <label>⏰ Время</label>
-                    <input type="time" id="editTime" value="${booking.time || ''}">
-                    <label>👥 Количество гостей</label>
-                    <input type="number" id="editGuests" value="${booking.guests || 2}" min="1" max="20">
+                    <label>👤 Имя</label><input type="text" id="editName" value="${booking.name || ''}">
+                    <label>📞 Телефон</label><input type="tel" id="editPhone" value="${booking.phone || ''}">
+                    <label>📅 Дата</label><input type="date" id="editDate" value="${booking.date || ''}">
+                    <label>⏰ Время</label><input type="time" id="editTime" value="${booking.time || ''}">
+                    <label>👥 Количество гостей</label><input type="number" id="editGuests" value="${booking.guests || 2}" min="1" max="20">
                     <label>📊 Статус</label>
                     <select id="editStatus">
                         <option value="pending" ${booking.status === 'pending' ? 'selected' : ''}>⏳ Ожидает</option>
                         <option value="confirmed" ${booking.status === 'confirmed' ? 'selected' : ''}>✅ Подтверждено</option>
                     </select>
-                    <div class="button-group">
-                        <button id="saveEditBtn" style="background: linear-gradient(135deg, #2d8a4e, #1e6b3b);">💾 СОХРАНИТЬ</button>
-                        <button id="closeEditBtn" style="background: linear-gradient(135deg, #3a3a45, #2a2a32);">ОТМЕНА</button>
-                    </div>
+                    <div class="button-group"><button id="saveEditBtn" style="background: linear-gradient(135deg, #2d8a4e, #1e6b3b);">💾 СОХРАНИТЬ</button><button id="closeEditBtn">ОТМЕНА</button></div>
                 </div>
             `;
             document.body.appendChild(modal);
-            
             document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
                 const updatedBooking = {
                     ...booking,
@@ -580,10 +398,7 @@
                     guests: parseInt(document.getElementById('editGuests').value),
                     status: document.getElementById('editStatus').value
                 };
-                if (!updatedBooking.phone || !updatedBooking.date || !updatedBooking.time) {
-                    showToast("Заполните все поля", true);
-                    return;
-                }
+                if (!updatedBooking.phone || !updatedBooking.date || !updatedBooking.time) { showToast("Заполните все поля", true); return; }
                 await updateBooking(booking.id, updatedBooking);
                 showToast(`✅ Бронь обновлена!`);
                 modal.remove();
@@ -618,13 +433,11 @@
         
         async function sendBroadcast(message, imageFile = null) {
             const users = await getBroadcastUsers();
-            if (users.length === 0) {
-                showToast("❌ Нет зарегистрированных пользователей", true);
-                return;
-            }
+            if (users.length === 0) { showToast("❌ Нет зарегистрированных пользователей", true); return; }
             let successCount = 0;
             showToast(`📢 Начинаю рассылку ${users.length} пользователям...`);
             for (const user of users) {
+                if (user.forceReauth === "true") continue;
                 let sent = false;
                 if (imageFile) sent = await sendPhotoMessage(user.userId, message, imageFile);
                 else sent = await sendTextMessage(user.userId, message);
@@ -639,22 +452,7 @@
                 let selectedImage = null;
                 const modal = document.createElement('div');
                 modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3>📢 СДЕЛАТЬ РАССЫЛКУ</h3>
-                        <p>👥 Пользователей: ${users.length}</p>
-                        <textarea id="broadcastMessage" placeholder="Введите текст сообщения..." rows="4"></textarea>
-                        <input type="file" id="broadcastImage" accept="image/jpeg,image/png,image/gif,image/webp">
-                        <div id="imagePreviewContainer" style="display:none;">
-                            <img id="imagePreview" style="max-width:100%; border-radius:12px;">
-                            <button id="removeImageBtn" class="remove-image-btn" style="background:#dc3545; padding:6px 12px; width:auto;">🗑 Удалить фото</button>
-                        </div>
-                        <div class="button-group">
-                            <button id="sendBroadcastBtn">📤 ОТПРАВИТЬ</button>
-                            <button id="closeModalBtn">ОТМЕНА</button>
-                        </div>
-                    </div>
-                `;
+                modal.innerHTML = `<div class="modal-content"><h3>📢 СДЕЛАТЬ РАССЫЛКУ</h3><p>👥 Пользователей: ${users.filter(u => u.forceReauth !== "true").length}</p><textarea id="broadcastMessage" placeholder="Введите текст сообщения..." rows="4"></textarea><input type="file" id="broadcastImage" accept="image/jpeg,image/png,image/gif,image/webp"><div id="imagePreviewContainer" style="display:none;"><img id="imagePreview" style="max-width:100%; border-radius:12px;"><button id="removeImageBtn" class="remove-image-btn" style="background:#dc3545; padding:6px 12px; width:auto;">🗑 Удалить фото</button></div><div class="button-group"><button id="sendBroadcastBtn">📤 ОТПРАВИТЬ</button><button id="closeModalBtn">ОТМЕНА</button></div></div>`;
                 document.body.appendChild(modal);
                 const messageInput = document.getElementById('broadcastMessage');
                 const imageInput = document.getElementById('broadcastImage');
@@ -749,31 +547,31 @@
                 booking.id = Date.now().toString();
                 booking.created_at = new Date().toISOString();
                 booking.phone = userPhone || booking.phone;
-                const response = await fetch(SHEET_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify([booking])
-                });
+                const response = await fetch(SHEET_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([booking]) });
                 return response.ok ? booking : null;
             } catch { showToast("Ошибка сохранения!", true); return null; }
         }
         
         async function updateBooking(bookingId, updatedData) {
             try {
-                const response = await fetch(`${SHEET_API}/id/${bookingId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedData)
-                });
+                const response = await fetch(`${SHEET_API}/id/${bookingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
                 return response.ok;
             } catch { return false; }
         }
         
         async function deleteBooking(bookingId) {
+            try { await fetch(`${SHEET_API}/id/${bookingId}`, { method: 'DELETE' }); return true; } catch { return false; }
+        }
+        
+        async function deleteUserAndBookings(userId, userRowId) {
             try {
-                await fetch(`${SHEET_API}/id/${bookingId}`, { method: 'DELETE' });
-                return true;
-            } catch { return false; }
+                await fetch(`${USERS_API}/id/${userRowId}`, { method: 'DELETE' });
+                const bookingsResponse = await fetch(SHEET_API);
+                const allBookings = await bookingsResponse.json();
+                const userBookings = allBookings.filter(b => String(b.userId) === String(userId));
+                for (const booking of userBookings) { await fetch(`${SHEET_API}/id/${booking.id}`, { method: 'DELETE' }); }
+                return userBookings.length;
+            } catch (error) { throw error; }
         }
         
         function showToast(message, isError = false) {
@@ -786,28 +584,22 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== Админ-панель (с удалением пользователей) ==========
+        // ========== Админ-панель ==========
         async function renderAdminPanel() {
             const deleted = await deleteExpiredBookings();
             if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
             await loadBookings();
             const users = await getBroadcastUsers();
+            const activeUsers = users.filter(u => u.forceReauth !== "true");
             const activeBookings = bookings.filter(b => !isBookingExpired(b));
             const pendingBookings = activeBookings.filter(b => b.status === 'pending');
             const confirmedBookings = activeBookings.filter(b => b.status === 'confirmed');
             
             let html = `
-                <div class="restaurant-header">
-                    <h1>⟡ АДМИН-ПАНЕЛЬ ⟡</h1>
-                    <div class="admin-panel">ВОШЛИ КАК АДМИНИСТРАТОР</div>
-                    <div class="delete-mode-indicator">🗑️ Брони удаляются через 24 часа после времени брони<br>✏️ Редактируйте и управляйте бронями<br>🎂 Проверка дней рождений за 7 дней</div>
-                    <div class="button-group">
-                        <button class="refresh-btn" id="refreshBtn">🔄 ОБНОВИТЬ</button>
-                        <button class="broadcast-btn" id="broadcastBtn">📢 РАССЫЛКА</button>
-                        <button class="birthday-btn" id="birthdayCheckBtn">🎂 ПРОВЕРИТЬ ДНИ РОЖДЕНИЯ (7 ДНЕЙ)</button>
-                    </div>
-                    <p style="font-size:13px; margin-top:12px; opacity:0.7;">👥 Пользователей: ${users.length} | 📊 Броней: ${activeBookings.length}</p>
-                </div>
+                <div class="restaurant-header"><h1>⟡ АДМИН-ПАНЕЛЬ ⟡</h1><div class="admin-panel">ВОШЛИ КАК АДМИНИСТРАТОР</div>
+                <div class="delete-mode-indicator">🗑️ Брони удаляются через 24 часа после времени брони<br>✏️ Редактируйте и управляйте бронями<br>🎂 Проверка дней рождений за 7 дней</div>
+                <div class="button-group"><button class="refresh-btn" id="refreshBtn">🔄 ОБНОВИТЬ</button><button class="broadcast-btn" id="broadcastBtn">📢 РАССЫЛКА</button><button class="birthday-btn" id="birthdayCheckBtn">🎂 ПРОВЕРИТЬ ДНИ РОЖДЕНИЯ (7 ДНЕЙ)</button></div>
+                <p style="font-size:13px; margin-top:12px; opacity:0.7;">👥 Пользователей: ${activeUsers.length} | 📊 Броней: ${activeBookings.length}</p></div>
             `;
             
             html += `<h2>⏳ ОЖИДАЮТ (${pendingBookings.length})</h2>`;
@@ -815,12 +607,7 @@
             else {
                 pendingBookings.forEach(b => {
                     const deleteDateTime = new Date(new Date(`${b.date}T${b.time}`).getTime() + 24 * 60 * 60 * 1000);
-                    html += `
-                        <div class="admin-booking" data-id="${b.id}">
-                            <strong>👤 ${b.name || 'Не указано'}</strong><br>📞 ${b.phone || 'Не указан'}<br>📅 ${b.date} в ${b.time}<br>👥 ${b.guests} гостей<br><span class="status-pending">⏳ ОЖИДАЕТ</span><br><small style="opacity:0.5;">🗑️ Удалится: ${deleteDateTime.toLocaleString()}</small>
-                            <div class="button-group"><button class="edit-btn" data-id="${b.id}">✏️ РЕД.</button><button class="confirm-btn" data-id="${b.id}">✅ ПОДТВ.</button><button class="cancel-btn" data-id="${b.id}">❌ УДАЛИТЬ</button></div>
-                        </div>
-                    `;
+                    html += `<div class="admin-booking" data-id="${b.id}"><strong>👤 ${b.name || 'Не указано'}</strong><br>📞 ${b.phone || 'Не указан'}<br>📅 ${b.date} в ${b.time}<br>👥 ${b.guests} гостей<br><span class="status-pending">⏳ ОЖИДАЕТ</span><br><small style="opacity:0.5;">🗑️ Удалится: ${deleteDateTime.toLocaleString()}</small><div class="button-group"><button class="edit-btn" data-id="${b.id}">✏️ РЕД.</button><button class="confirm-btn" data-id="${b.id}">✅ ПОДТВ.</button><button class="cancel-btn" data-id="${b.id}">❌ УДАЛИТЬ</button></div></div>`;
                 });
             }
             
@@ -829,31 +616,23 @@
             else {
                 confirmedBookings.forEach(b => {
                     const deleteDateTime = new Date(new Date(`${b.date}T${b.time}`).getTime() + 24 * 60 * 60 * 1000);
-                    html += `
-                        <div class="admin-booking">
-                            <strong>👤 ${b.name}</strong><br>📞 ${b.phone}<br>📅 ${b.date} в ${b.time}<br>👥 ${b.guests} гостей<br><span class="status-confirmed">✅ ПОДТВЕРЖДЕНО</span><br><small style="opacity:0.5;">🗑️ Удалится: ${deleteDateTime.toLocaleString()}</small>
-                            <div class="button-group"><button class="edit-btn" data-id="${b.id}">✏️ РЕД.</button><button class="cancel-btn" data-id="${b.id}">❌ УДАЛИТЬ</button></div>
-                        </div>
-                    `;
+                    html += `<div class="admin-booking"><strong>👤 ${b.name}</strong><br>📞 ${b.phone}<br>📅 ${b.date} в ${b.time}<br>👥 ${b.guests} гостей<br><span class="status-confirmed">✅ ПОДТВЕРЖДЕНО</span><br><small style="opacity:0.5;">🗑️ Удалится: ${deleteDateTime.toLocaleString()}</small><div class="button-group"><button class="edit-btn" data-id="${b.id}">✏️ РЕД.</button><button class="cancel-btn" data-id="${b.id}">❌ УДАЛИТЬ</button></div></div>`;
                 });
             }
             
-            // ========== СПИСОК ПОЛЬЗОВАТЕЛЕЙ С УДАЛЕНИЕМ ==========
             html += `<h2>👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</h2>`;
-            html += `<div class="delete-mode-indicator" style="background:rgba(220,53,69,0.2); border-color:#dc3545;">⚠️ ВНИМАНИЕ: Удаление пользователя удалит все его данные и брони!</div>`;
+            html += `<div class="delete-mode-indicator" style="background:rgba(220,53,69,0.2); border-color:#dc3545;">⚠️ ВНИМАНИЕ: Удаление пользователя удалит все его данные! Кнопка "СБРОСИТЬ" заставит его перерегистрироваться.</div>`;
             
             for (const user of users) {
-                html += `
-                    <div class="admin-booking" data-userid="${user.userId}">
-                        <strong>👤 ${user.name || 'Без имени'}</strong><br>
-                        📞 ${user.phone || 'Нет телефона'}<br>
-                        🆔 TG ID: ${user.userId}<br>
-                        🎂 ${user.birthday || 'Дата не указана'}<br>
-                        <div class="button-group">
-                            <button class="delete-user-btn" data-userid="${user.userId}" data-userrowid="${user.id}">❌ УДАЛИТЬ ПОЛЬЗОВАТЕЛЯ</button>
-                        </div>
+                const isForceReauth = user.forceReauth === "true";
+                html += `<div class="admin-booking" data-userid="${user.userId}">
+                    <strong>👤 ${user.name || 'Без имени'}</strong> ${isForceReauth ? '<span style="color:#ff9800;"> [ОЖИДАЕТ ПЕРЕРЕГИСТРАЦИИ]</span>' : ''}<br>
+                    📞 ${user.phone || 'Нет телефона'}<br>🆔 TG ID: ${user.userId}<br>🎂 ${user.birthday || 'Дата не указана'}<br>
+                    <div class="button-group">
+                        <button class="reset-btn" data-userid="${user.userId}" data-userrowid="${user.id}">🔄 СБРОСИТЬ (перерегистрация)</button>
+                        <button class="delete-user-btn" data-userid="${user.userId}" data-userrowid="${user.id}">❌ УДАЛИТЬ ПОЛНОСТЬЮ</button>
                     </div>
-                `;
+                </div>`;
             }
             
             document.getElementById('app').innerHTML = html;
@@ -888,32 +667,29 @@
                 });
             });
             
-            // Обработчики удаления пользователей
             document.querySelectorAll('.delete-user-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     const userId = btn.dataset.userid;
                     const userRowId = btn.dataset.userrowid;
-                    
                     if (confirm(`❌ ВЫ УВЕРЕНЫ?\n\nПользователь с ID ${userId} будет полностью удалён вместе со всеми бронями.\n\nЭто действие НЕЛЬЗЯ отменить!`)) {
                         try {
-                            // 1. Удаляем пользователя из таблицы users
-                            await fetch(`${USERS_API}/id/${userRowId}`, { method: 'DELETE' });
-                            
-                            // 2. Удаляем все брони этого пользователя
-                            const bookingsResponse = await fetch(SHEET_API);
-                            const allBookings = await bookingsResponse.json();
-                            const userBookings = allBookings.filter(b => String(b.userId) === String(userId));
-                            
-                            for (const booking of userBookings) {
-                                await fetch(`${SHEET_API}/id/${booking.id}`, { method: 'DELETE' });
-                            }
-                            
-                            showToast(`✅ Пользователь ${userId} и его ${userBookings.length} броней удалены`);
+                            const bookingsCount = await deleteUserAndBookings(userId, userRowId);
+                            showToast(`✅ Пользователь ${userId} и его ${bookingsCount} броней удалены`);
                             renderAdminPanel();
-                        } catch (error) {
-                            showToast("❌ Ошибка при удалении", true);
-                            console.error(error);
-                        }
+                        } catch (error) { showToast("❌ Ошибка при удалении", true); }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.reset-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userId = btn.dataset.userid;
+                    if (confirm(`🔄 Пользователь с ID ${userId} будет сброшен.\n\nЕму придётся заново зарегистрироваться в приложении.\n\nБрони пользователя НЕ УДАЛЯЮТСЯ.\n\nПродолжить?`)) {
+                        const success = await forceUserReauth(userId);
+                        if (success) {
+                            showToast(`✅ Пользователь ${userId} помечен на перерегистрацию`);
+                            renderAdminPanel();
+                        } else { showToast("❌ Ошибка", true); }
                     }
                 });
             });
@@ -925,16 +701,13 @@
             const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b));
             const html = `
                 <div class="restaurant-header"><h1>⟡ HUQQA LOUNGE ⟡</h1><p style="opacity:0.6;">ЗАБРОНИРУЙТЕ СТОЛИК В ПРЕМИУМ ЛАУНЖЕ</p></div>
-                <div class="card">
-                    <label>👤 ВАШЕ ИМЯ</label><input type="text" id="name" value="${TELEGRAM_USER_NAME}">
-                    <label>📞 ТЕЛЕФОН</label><input type="tel" id="phone" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
-                    <label>📅 ДАТА</label><input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
-                    <label>⏰ ВРЕМЯ</label><input type="time" id="time">
-                    <label>👥 ГОСТЕЙ</label><input type="number" id="guests" min="1" max="10" value="2">
-                    <button id="submitBookingBtn">⟡ ЗАБРОНИРОВАТЬ СТОЛ ⟡</button>
-                </div>
-                <h3>📋 МОИ БРОНИРОВАНИЯ</h3>
-                ${myActiveBookings.length === 0 ? '<p style="opacity:0.5;">У вас нет активных броней</p>' : myActiveBookings.map(b => `<div class="booking-card"><strong>${b.date} в ${b.time}</strong><br>ГОСТЕЙ: ${b.guests} | СТАТУС: ${b.status === 'pending' ? '<span class="status-pending">ОЖИДАЕТ</span>' : '<span class="status-confirmed">ПОДТВЕРЖДЕНО</span>'}</div>`).join('')}
+                <div class="card"><label>👤 ВАШЕ ИМЯ</label><input type="text" id="name" value="${TELEGRAM_USER_NAME}">
+                <label>📞 ТЕЛЕФОН</label><input type="tel" id="phone" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
+                <label>📅 ДАТА</label><input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
+                <label>⏰ ВРЕМЯ</label><input type="time" id="time">
+                <label>👥 ГОСТЕЙ</label><input type="number" id="guests" min="1" max="10" value="2">
+                <button id="submitBookingBtn">⟡ ЗАБРОНИРОВАТЬ СТОЛ ⟡</button></div>
+                <h3>📋 МОИ БРОНИРОВАНИЯ</h3>${myActiveBookings.length === 0 ? '<p style="opacity:0.5;">У вас нет активных броней</p>' : myActiveBookings.map(b => `<div class="booking-card"><strong>${b.date} в ${b.time}</strong><br>ГОСТЕЙ: ${b.guests} | СТАТУС: ${b.status === 'pending' ? '<span class="status-pending">ОЖИДАЕТ</span>' : '<span class="status-confirmed">ПОДТВЕРЖДЕНО</span>'}</div>`).join('')}
             `;
             document.getElementById('app').innerHTML = html;
             document.getElementById('submitBookingBtn')?.addEventListener('click', async () => {
@@ -946,15 +719,10 @@
                 if (!name || !phone || !date || !time) { showToast("Заполните все поля", true); return; }
                 const newBooking = { userId: String(TELEGRAM_USER_ID), name, phone, date, time, guests, status: 'pending' };
                 const saved = await saveBooking(newBooking);
-                if (saved) {
-                    await sendNotificationToAdmins(newBooking);
-                    showToast(`✅ Стол забронирован!`);
-                    setTimeout(() => renderBooking(), 1000);
-                }
+                if (saved) { await sendNotificationToAdmins(newBooking); showToast(`✅ Стол забронирован!`); setTimeout(() => renderBooking(), 1000); }
             });
         }
         
-        // ========== Меню ==========
         function renderMenu() {
             let html = `<h2>📖 НАШЕ МЕНЮ</h2>`;
             const categories = [...new Set(menuItems.map(i => i.category))];
@@ -965,26 +733,20 @@
             document.getElementById('app').innerHTML = html;
         }
         
-        // ========== Моя карта ==========
         function renderBonus() {
             const bookingsCount = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b)).length;
-            const html = `
-                <h2>🎁 МОЯ КАРТА ГОСТЯ</h2>
-                <div class="card"><h3>💰 БОНУСНЫЙ БАЛАНС</h3><div class="bonus-balance">${userBonuses.balance}</div><p>100 бонусов = 50₽ скидка</p></div>
-                <div class="card"><h3>📊 СТАТИСТИКА</h3><p>📌 Активных броней: ${bookingsCount}</p><p>🎫 +300 бонусов за регистрацию</p>${userBirthday ? `<p>🎂 День рождения: ${userBirthday}</p>` : ''}</div>
-                <div class="card"><h3>📜 ИСТОРИЯ ОПЕРАЦИЙ</h3>${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : userBonuses.history.map(h => `<div style="border-bottom:1px solid rgba(232,69,69,0.2); padding:8px 0;">${h.date} — +${h.amount} (${h.reason})</div>`).join('')}</div>
-            `;
+            const html = `<h2>🎁 МОЯ КАРТА ГОСТЯ</h2><div class="card"><h3>💰 БОНУСНЫЙ БАЛАНС</h3><div class="bonus-balance">${userBonuses.balance}</div><p>100 бонусов = 50₽ скидка</p></div>
+            <div class="card"><h3>📊 СТАТИСТИКА</h3><p>📌 Активных броней: ${bookingsCount}</p><p>🎫 +300 бонусов за регистрацию</p>${userBirthday ? `<p>🎂 День рождения: ${userBirthday}</p>` : ''}</div>
+            <div class="card"><h3>📜 ИСТОРИЯ ОПЕРАЦИЙ</h3>${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : userBonuses.history.map(h => `<div style="border-bottom:1px solid rgba(232,69,69,0.2); padding:8px 0;">${h.date} — +${h.amount} (${h.reason})</div>`).join('')}</div>`;
             document.getElementById('app').innerHTML = html;
         }
         
-        // ========== Акции ==========
         function renderPromo() {
             const html = `<h2>🔥 АКЦИИ И СКИДКИ</h2>${promos.map(p => `<div class="promo-card"><strong style="color:#e84545;">${p.name}</strong> ${p.discount ? `— скидка ${p.discount}%` : ''}<br>${p.desc}<br><button class="copyPromoBtn" data-code="${p.code}">📋 СКОПИРОВАТЬ КОД: ${p.code}</button></div>`).join('')}<div class="card"><h3>💡 КАК ИСПОЛЬЗОВАТЬ?</h3><p>Скопируй промокод и назови его официанту при заказе.</p></div>`;
             document.getElementById('app').innerHTML = html;
             document.querySelectorAll('.copyPromoBtn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.code); showToast(`✅ Промокод скопирован`); }); });
         }
         
-        // ========== Контакты ==========
         function renderContacts() {
             const html = `<h2>📞 КОНТАКТЫ</h2><div class="card"><p>📍 ул. Молодежная 15Б, г. Химки</p><p>📞 <a href="tel:+79099846677" style="color:#e84545;">+7 (909) 984-66-77</a></p><p>🕒 Вс-Чт: 12:00 – 02:00</p><p>🕒 Пт-Сб: 12:00 – 03:00</p><button id="shareContactBtn">📱 ПОДЕЛИТЬСЯ НОМЕРОМ</button></div><iframe width="100%" height="250" frameborder="0" style="border-radius:24px; border:1px solid rgba(232,69,69,0.3);" src="https://yandex.ru/map-widget/v1/?ll=37.4450,55.8890&z=17&pt=37.4450,55.8890,pm2rdm&what=here&text=Молодежная%2015Б%20Химки"></iframe>`;
             document.getElementById('app').innerHTML = html;
@@ -994,6 +756,14 @@
         let currentTab = "booking";
         
         async function renderCurrentTab() {
+            // Проверяем, нужно ли принудительно очистить localStorage
+            const needReauth = await checkForceReauth();
+            if (needReauth) {
+                isRegistered = false;
+                userPhone = null;
+                userBirthday = null;
+            }
+            
             if (!isRegistered) { await showPhoneRegistrationModal(); renderCurrentTab(); return; }
             if (currentTab === 'admin' && IS_ADMIN) await renderAdminPanel();
             else if (currentTab === 'booking') await renderBooking();
