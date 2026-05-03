@@ -62,7 +62,7 @@
             font-size: 24px;
         }
 
-        .card, .menu-item, .promo-card, .booking-item {
+        .card, .menu-item, .promo-card, .booking-item, .admin-booking {
             background: var(--tg-theme-secondary-bg-color, #f8f8f8);
             border-radius: 16px;
             padding: 16px;
@@ -86,6 +86,19 @@
             border: none;
             font-weight: bold;
             cursor: pointer;
+        }
+
+        .confirm-btn {
+            background: #28a745;
+            margin-right: 8px;
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .cancel-btn {
+            background: #dc3545;
+            width: auto;
+            padding: 8px 16px;
         }
 
         .bonus-balance {
@@ -139,6 +152,32 @@
             font-size: 28px;
             color: var(--tg-theme-button-color, #31b545);
         }
+
+        .admin-panel {
+            background: #ff9800;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .status-pending {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .status-confirmed {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -157,7 +196,6 @@
         // --- Инициализация Telegram WebApp ---
         let tg = window.Telegram?.WebApp;
         if (!tg || !tg.initDataUnsafe?.user?.id) {
-            // Фейковый ID для теста без Telegram
             tg = {
                 initDataUnsafe: { user: { id: Math.floor(Math.random() * 1000000), first_name: "Гость", username: "guest" } },
                 ready: () => {},
@@ -172,11 +210,15 @@
         tg.ready();
         document.body.style.background = tg.themeParams.bg_color || '#ffffff';
         
-        // Глобальные переменные
+        // ==================== АДМИН ID ====================
+        const ADMIN_IDS = [755574601];  // ← ТВОЙ ID ДОБАВЛЕН!
+        // =================================================
+        
         const TELEGRAM_USER_ID = tg.initDataUnsafe.user.id;
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
+        const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // Хранилище данных (localStorage вместо базы данных)
+        // --- Хранилище данных ---
         let appData = {
             bookings: [],
             bonuses: {},
@@ -196,54 +238,50 @@
             ]
         };
         
-        // Загрузка сохраненных данных из localStorage
+        // Загрузка данных из localStorage
         function loadData() {
-            const saved = localStorage.getItem(`huqqa_${TELEGRAM_USER_ID}`);
+            const saved = localStorage.getItem(`huqqa_data`);
             if (saved) {
-                const userData = JSON.parse(saved);
-                appData.bookings = userData.bookings || [];
-                appData.bonuses[TELEGRAM_USER_ID] = userData.bonusBalance || 100;
-                appData.bonusHistory[TELEGRAM_USER_ID] = userData.bonusHistory || [];
+                const allData = JSON.parse(saved);
+                appData.bookings = allData.bookings || [];
+                appData.bonuses = allData.bonuses || {};
+                appData.bonusHistory = allData.bonusHistory || {};
             }
             
-            // Инициализация бонусов для нового пользователя
             if (!appData.bonuses[TELEGRAM_USER_ID]) {
                 appData.bonuses[TELEGRAM_USER_ID] = 100;
                 appData.bonusHistory[TELEGRAM_USER_ID] = [];
-                addBonusHistory("Регистрация", 100);
+                addBonusHistory(TELEGRAM_USER_ID, "Регистрация", 100);
             }
-        }
-        
-        // Сохранение данных
-        function saveData() {
-            const userData = {
-                bookings: appData.bookings,
-                bonusBalance: appData.bonuses[TELEGRAM_USER_ID],
-                bonusHistory: appData.bonusHistory[TELEGRAM_USER_ID]
-            };
-            localStorage.setItem(`huqqa_${TELEGRAM_USER_ID}`, JSON.stringify(userData));
-        }
-        
-        // Добавление бонусов
-        function addBonus(reason, amount) {
-            appData.bonuses[TELEGRAM_USER_ID] += amount;
-            addBonusHistory(reason, amount);
             saveData();
         }
         
-        // История бонусов
-        function addBonusHistory(reason, amount) {
-            const history = appData.bonusHistory[TELEGRAM_USER_ID];
-            history.unshift({
+        function saveData() {
+            const allData = {
+                bookings: appData.bookings,
+                bonuses: appData.bonuses,
+                bonusHistory: appData.bonusHistory
+            };
+            localStorage.setItem(`huqqa_data`, JSON.stringify(allData));
+        }
+        
+        function addBonusHistory(userId, reason, amount) {
+            if (!appData.bonusHistory[userId]) appData.bonusHistory[userId] = [];
+            appData.bonusHistory[userId].unshift({
                 date: new Date().toLocaleString(),
                 reason: reason,
                 amount: amount
             });
-            // Оставляем только последние 10 записей
-            if (history.length > 10) history.pop();
+            if (appData.bonusHistory[userId].length > 10) appData.bonusHistory[userId].pop();
         }
         
-        // Показать уведомление
+        function addBonus(userId, reason, amount) {
+            if (!appData.bonuses[userId]) appData.bonuses[userId] = 0;
+            appData.bonuses[userId] += amount;
+            addBonusHistory(userId, reason, amount);
+            saveData();
+        }
+        
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -254,9 +292,84 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // --- Отрисовка вкладок ---
+        // --- АДМИН-ПАНЕЛЬ ---
+        function renderAdminPanel() {
+            const pendingBookings = appData.bookings.filter(b => b.status === 'pending');
+            const confirmedBookings = appData.bookings.filter(b => b.status === 'confirmed');
+            
+            let html = `
+                <div class="restaurant-header">
+                    <h1>👑 Админ-панель</h1>
+                    <div class="admin-panel">Вы вошли как администратор | ID: ${TELEGRAM_USER_ID}</div>
+                </div>
+            `;
+            
+            html += `<h2>⏳ Ожидают подтверждения (${pendingBookings.length})</h2>`;
+            if (pendingBookings.length === 0) {
+                html += `<p>✨ Нет новых броней</p>`;
+            } else {
+                pendingBookings.forEach(b => {
+                    html += `
+                        <div class="admin-booking" data-id="${b.id}">
+                            <strong>👤 ${b.name}</strong><br>
+                            📞 ${b.phone}<br>
+                            📅 ${b.date} в ${b.time}<br>
+                            👥 ${b.guests} гостей<br>
+                            🆔 TG ID: ${b.userId}<br>
+                            <span class="status-pending">⏳ Статус: Ожидает</span>
+                            <div class="button-group">
+                                <button class="confirm-btn" data-id="${b.id}">✅ Подтвердить</button>
+                                <button class="cancel-btn" data-id="${b.id}">❌ Отменить</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `<h2>✅ Подтверждённые брони (${confirmedBookings.length})</h2>`;
+            if (confirmedBookings.length === 0) {
+                html += `<p>Нет подтверждённых броней</p>`;
+            } else {
+                confirmedBookings.forEach(b => {
+                    html += `
+                        <div class="admin-booking">
+                            <strong>👤 ${b.name}</strong><br>
+                            📞 ${b.phone}<br>
+                            📅 ${b.date} в ${b.time}<br>
+                            👥 ${b.guests} гостей<br>
+                            <span class="status-confirmed">✅ Статус: Подтверждено</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('app').innerHTML = html;
+            
+            document.querySelectorAll('.confirm-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const bookingId = parseInt(btn.dataset.id);
+                    const booking = appData.bookings.find(b => b.id === bookingId);
+                    if (booking) {
+                        booking.status = 'confirmed';
+                        saveData();
+                        showToast(`✅ Бронь #${bookingId} подтверждена!`);
+                        renderAdminPanel();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const bookingId = parseInt(btn.dataset.id);
+                    appData.bookings = appData.bookings.filter(b => b.id !== bookingId);
+                    saveData();
+                    showToast(`❌ Бронь #${bookingId} удалена`);
+                    renderAdminPanel();
+                });
+            });
+        }
         
-        // 1. Бронирование стола
+        // --- Обычные вкладки для пользователей ---
         function renderBooking() {
             const myBookings = appData.bookings.filter(b => b.userId === TELEGRAM_USER_ID);
             
@@ -278,7 +391,7 @@
                     myBookings.map(b => `
                         <div class="booking-item">
                             <strong>${b.date} в ${b.time}</strong><br>
-                            Гостей: ${b.guests} | Статус: ${b.status === 'pending' ? '⏳ Ожидает' : '✅ Подтверждено'}
+                            Гостей: ${b.guests} | Статус: ${b.status === 'pending' ? '<span class="status-pending">⏳ Ожидает</span>' : '<span class="status-confirmed">✅ Подтверждено</span>'}
                         </div>
                     `).join('')
                 }
@@ -309,14 +422,13 @@
                 };
                 
                 appData.bookings.push(newBooking);
-                addBonus(`Бронь стола на ${date} ${time}`, 50);
+                addBonus(TELEGRAM_USER_ID, `Бронь стола на ${date} ${time}`, 50);
                 saveData();
                 showToast(`✅ Стол забронирован! +50 бонусов`);
                 setTimeout(() => renderBooking(), 1000);
             });
         }
         
-        // 2. Меню
         function renderMenu() {
             const categories = [...new Set(appData.menu.map(item => item.category))];
             let html = `<h2>📖 Наше меню</h2>`;
@@ -340,7 +452,7 @@
             document.querySelectorAll('.likeBtn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const itemName = e.target.dataset.name;
-                    addBonus(`Лайк блюда: ${itemName}`, 5);
+                    addBonus(TELEGRAM_USER_ID, `Лайк блюда: ${itemName}`, 5);
                     showToast(`❤️ Спасибо за лайк! +5 бонусов`);
                     e.target.disabled = true;
                     e.target.textContent = '✓ Лайкнут';
@@ -349,7 +461,6 @@
             });
         }
         
-        // 3. Бонусы + уровень лояльности
         function renderBonus() {
             const balance = appData.bonuses[TELEGRAM_USER_ID] || 0;
             const bookingsCount = appData.bookings.filter(b => b.userId === TELEGRAM_USER_ID).length;
@@ -375,7 +486,6 @@
             document.getElementById('app').innerHTML = html;
         }
         
-        // 4. Акции
         function renderPromo() {
             const html = `
                 <h2>🔥 Акции и скидки</h2>
@@ -402,7 +512,6 @@
             });
         }
         
-        // 5. Контакты
         function renderContacts() {
             const html = `
                 <h2>📞 Контакты</h2>
@@ -411,7 +520,7 @@
                     <p>📞 <a href="tel:+74951234567" style="color: var(--tg-theme-link-color)">+7 (495) 123-45-67</a></p>
                     <p>🕒 Ежедневно: 12:00 – 23:00</p>
                     <p>📧 info@huqqa.ru</p>
-                    <button id="shareContactBtn">📱 Поделиться моим номером</button>
+                    <button id="shareContactBtn">📱 Поделиться номером</button>
                 </div>
                 <iframe width="100%" height="250" frameborder="0" style="border-radius:16px" 
                     src="https://yandex.ru/map-widget/v1/?ll=37.617698,55.755864&z=15"></iframe>
@@ -419,37 +528,57 @@
             document.getElementById('app').innerHTML = html;
             
             document.getElementById('shareContactBtn')?.addEventListener('click', () => {
-                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
                 showToast(`Ваш номер передан ресторану`);
             });
         }
         
-        // --- Главный рендер по вкладке ---
+        // --- Главный рендер ---
         let currentTab = "booking";
         
         async function renderCurrentTab() {
-            if (currentTab === 'booking') renderBooking();
+            if (currentTab === 'admin' && IS_ADMIN) {
+                renderAdminPanel();
+            } else if (currentTab === 'booking') renderBooking();
             else if (currentTab === 'menu') renderMenu();
             else if (currentTab === 'bonus') renderBonus();
             else if (currentTab === 'promo') renderPromo();
             else if (currentTab === 'contacts') renderContacts();
+            else renderBooking();
         }
         
-        // --- Обработка нажатий на табы ---
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                currentTab = tab.dataset.tab;
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderCurrentTab();
-                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        // --- Добавляем админ-вкладку если пользователь админ ---
+        function setupTabs() {
+            const tabBar = document.querySelector('.tab-bar');
+            
+            if (IS_ADMIN && !document.querySelector('.tab[data-tab="admin"]')) {
+                const adminTab = document.createElement('button');
+                adminTab.className = 'tab';
+                adminTab.setAttribute('data-tab', 'admin');
+                adminTab.innerHTML = '👑<span>Админ</span>';
+                tabBar.appendChild(adminTab);
+            }
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    currentTab = tab.dataset.tab;
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderCurrentTab();
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+                });
             });
-        });
+        }
         
         // --- Запуск ---
         loadData();
+        setupTabs();
         document.querySelector('.tab').classList.add('active');
         renderCurrentTab();
+        
+        // Вывод в консоль для отладки
+        console.log("Telegram User ID:", TELEGRAM_USER_ID);
+        console.log("Is Admin:", IS_ADMIN);
+        console.log("Admin IDs:", ADMIN_IDS);
     </script>
 </body>
 </html>
