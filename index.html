@@ -19,7 +19,6 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* Импорт шрифта Inter */
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
 
         .container {
@@ -29,7 +28,6 @@
             padding-top: env(safe-area-inset-top, 20px);
         }
 
-        /* Tab Bar — стеклянный эффект */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -78,7 +76,6 @@
             transform: scale(1.05);
         }
 
-        /* Карточки — стеклянные с градиентом */
         .card, .menu-item, .promo-card, .booking-item, .admin-booking, .booking-card {
             background: linear-gradient(135deg, rgba(30, 30, 40, 0.9) 0%, rgba(20, 20, 28, 0.95) 100%);
             border-radius: 24px;
@@ -95,7 +92,6 @@
             box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
         }
 
-        /* Поля ввода — премиум стиль */
         input, select, textarea {
             font-size: 16px;
             padding: 14px 16px;
@@ -121,7 +117,6 @@
             color: rgba(255, 255, 255, 0.35);
         }
 
-        /* Кнопки — градиентные */
         button {
             background: linear-gradient(135deg, #FFB347 0%, #FF8C00 100%);
             color: #1a1a1a;
@@ -143,7 +138,6 @@
             box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3);
         }
 
-        /* Кнопки админ-панели */
         .confirm-btn {
             background: linear-gradient(135deg, #28a745, #20c997);
             width: auto;
@@ -179,7 +173,6 @@
             margin-bottom: 0;
         }
 
-        /* Бонусный баланс */
         .bonus-balance {
             font-size: 56px;
             font-weight: 800;
@@ -192,7 +185,6 @@
             text-shadow: 0 2px 10px rgba(255, 179, 71, 0.3);
         }
 
-        /* Заголовки */
         .restaurant-header h1 {
             font-size: 32px;
             font-weight: 700;
@@ -217,7 +209,6 @@
             color: #FFB347;
         }
 
-        /* Категории меню */
         .menu-category {
             font-size: 20px;
             font-weight: 700;
@@ -257,7 +248,6 @@
             font-size: 14px;
         }
 
-        /* Статусы */
         .status-pending {
             color: #FFB347;
             font-weight: 600;
@@ -278,7 +268,6 @@
             font-size: 12px;
         }
 
-        /* Toast уведомления */
         .toast {
             position: fixed;
             bottom: 90px;
@@ -304,7 +293,6 @@
             100% { opacity: 0; transform: translateY(-20px); }
         }
 
-        /* Модальное окно */
         .modal {
             position: fixed;
             top: 0;
@@ -336,7 +324,6 @@
             text-align: center;
         }
 
-        /* Админ панель индикатор */
         .admin-panel {
             background: linear-gradient(135deg, #FFB347, #FF8C00);
             color: #1a1a1a;
@@ -359,7 +346,6 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
-        /* Лабы */
         label {
             font-size: 13px;
             font-weight: 500;
@@ -369,13 +355,11 @@
             letter-spacing: 0.3px;
         }
 
-        /* Кнопка поделиться */
         #shareContactBtn {
             background: linear-gradient(135deg, #3a3a4a, #2a2a38);
             color: #fff;
         }
 
-        /* Промокод */
         .copyPromoBtn {
             background: rgba(255, 179, 71, 0.15);
             color: #FFB347;
@@ -383,7 +367,6 @@
             margin-top: 10px;
         }
 
-        /* Группа кнопок */
         .button-group {
             display: flex;
             gap: 10px;
@@ -398,7 +381,6 @@
             font-size: 14px;
         }
 
-        /* Скролл */
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -485,6 +467,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify([newUser])
                     });
+                    
+                    // ========== +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ ==========
+                    addBonus("🎁 Регистрация в Huqqa Lounge", 300);
+                    showToast("🎉 +300 бонусов за регистрацию!");
+                    // ================================================
+                    
                 } else if (existing.phone !== phone) {
                     await fetch(`${USERS_API}/id/${existing.id}`, {
                         method: 'PATCH',
@@ -765,7 +753,6 @@
         // ========== Данные приложения ==========
         let bookings = [];
         
-        // Меню (оставляем как в твоём коде)
         const menuItems = [
             { name: "Бизнес кальян (По будням с 12:00 - 17:00)", price: 1500, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Кальян на классической чаше", price: 1700, category: "Кальяны", subcategory: "Кальяны" },
@@ -1027,7 +1014,7 @@
             });
         }
         
-        // ========== Бронирование ==========
+        // ========== Бронирование (БЕЗ бонусов) ==========
         async function renderBooking() {
             await loadBookings();
             const myActiveBookings = bookings.filter(b => 
@@ -1158,7 +1145,7 @@
                 <div class="card">
                     <h3>📊 Статистика</h3>
                     <p>📌 Активных броней: ${bookingsCount}</p>
-                    <p>🎫 Бонусы начисляются за каждое бронирование</p>
+                    <p>🎫 +300 бонусов за регистрацию</p>
                 </div>
                 <div class="card">
                     <h3>📜 История операций</h3>
@@ -1237,6 +1224,7 @@
                     <div class="modal-content">
                         <h3>🏮 Добро пожаловать в Huqqa Lounge</h3>
                         <p style="text-align:center; margin-bottom:16px;">Укажите ваш номер телефона для бронирования</p>
+                        <p style="text-align:center; margin-bottom:8px; color:#FFB347;">🎁 +300 бонусов за регистрацию!</p>
                         <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
                         <div class="button-group">
                             <button id="savePhoneBtn">✅ Продолжить</button>
