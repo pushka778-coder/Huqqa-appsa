@@ -65,6 +65,7 @@
             margin-bottom: 16px;
         }
 
+        /* Улучшенные стили для полей ввода — видимые на тёмном фоне */
         input, select, textarea {
             font-size: 16px;
             padding: 14px;
@@ -77,12 +78,14 @@
             box-sizing: border-box;
         }
 
+        /* Дополнительная подсветка при фокусе */
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--tg-theme-button-color, #31b545);
             box-shadow: 0 0 0 2px rgba(49, 181, 69, 0.2);
         }
 
+        /* Placeholder тоже должен быть видимым */
         input::placeholder, textarea::placeholder {
             color: var(--tg-theme-hint-color, #999);
             opacity: 1;
@@ -245,7 +248,6 @@
 
         .modal-content h3 {
             margin-bottom: 15px;
-            text-align: center;
         }
 
         .image-preview {
@@ -304,6 +306,7 @@
             color: var(--tg-theme-hint-color, #666);
         }
 
+        /* Стили для карточек бронирования */
         .booking-card {
             background: var(--tg-theme-secondary-bg-color, #f5f5f5);
             border-radius: 16px;
@@ -311,13 +314,16 @@
             margin-bottom: 12px;
         }
 
-        .welcome-list {
-            text-align: left;
-            margin: 15px 0;
-            padding-left: 20px;
+        .booking-card strong {
+            color: var(--tg-theme-text-color, #000);
         }
-        .welcome-list p {
-            margin: 8px 0;
+
+        /* Стили для меток */
+        label {
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: block;
+            color: var(--tg-theme-text-color, #333);
         }
     </style>
 </head>
@@ -337,10 +343,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         // ==================== НАСТРОЙКИ ====================
-        // ОДНА БАЗА ДАННЫХ (Google Sheets + sheet.best)
-        // Создай таблицу с листами: bookings, users, admins
-        const DB_API = "https://api.sheetbest.com/sheets/912a1d92-a006-4a4c-9085-7d6f3722e453";
-        
+        const SHEET_API = "https://api.sheetbest.com/sheets/86b2770d-6921-43a6-ada0-a16dbd1ce54c";
+        const USERS_API = "https://api.sheetbest.com/sheets/912a1d92-a006-4a4c-9085-7d6f3722e453";
+        const ADMIN_IDS = [755574601];
         const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
         // ===================================================
         
@@ -362,24 +367,7 @@
         
         const TELEGRAM_USER_ID = tg.initDataUnsafe.user.id;
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
-        
-        // ========== ЗАГРУЗКА АДМИНОВ ИЗ БАЗЫ ==========
-        let ADMIN_IDS = [];  // Список админов загружается из таблицы admins
-        
-        async function loadAdminsFromDB() {
-            try {
-                const response = await fetch(`${DB_API}/admins`);
-                const admins = await response.json();
-                ADMIN_IDS = admins.map(a => Number(a.adminId));
-                console.log("👑 Загружены админы:", ADMIN_IDS);
-                return ADMIN_IDS;
-            } catch (error) {
-                console.error("Ошибка загрузки админов:", error);
-                return [];
-            }
-        }
-        
-        const IS_ADMIN = () => ADMIN_IDS.includes(Number(TELEGRAM_USER_ID));
+        const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
         // ========== Регистрация ==========
         let userPhone = null;
@@ -396,7 +384,7 @@
         
         async function saveUserDataToCloud(phone) {
             try {
-                const response = await fetch(`${DB_API}/users`);
+                const response = await fetch(USERS_API);
                 const users = await response.json();
                 const existing = users.find(u => String(u.userId) === String(TELEGRAM_USER_ID));
                 
@@ -408,13 +396,13 @@
                         phone: phone,
                         registeredAt: new Date().toISOString()
                     };
-                    await fetch(`${DB_API}/users`, {
+                    await fetch(USERS_API, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify([newUser])
                     });
                 } else if (existing.phone !== phone) {
-                    await fetch(`${DB_API}/users/id/${existing.id}`, {
+                    await fetch(`${USERS_API}/id/${existing.id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ phone: phone })
@@ -437,7 +425,7 @@
         
         async function getBroadcastUsers() {
             try {
-                const response = await fetch(`${DB_API}/users`);
+                const response = await fetch(USERS_API);
                 return await response.json();
             } catch (error) {
                 return [];
@@ -455,12 +443,12 @@
         
         async function deleteExpiredBookings() {
             try {
-                const response = await fetch(`${DB_API}/bookings`);
+                const response = await fetch(SHEET_API);
                 const allBookings = await response.json();
                 let deletedCount = 0;
                 for (const booking of allBookings) {
                     if (isBookingExpired(booking)) {
-                        await fetch(`${DB_API}/bookings/id/${booking.id}`, { method: 'DELETE' });
+                        await fetch(`${SHEET_API}/id/${booking.id}`, { method: 'DELETE' });
                         deletedCount++;
                     }
                 }
@@ -470,9 +458,8 @@
             }
         }
         
-        // ========== ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРАМ ==========
+        // ========== ОТПРАВКА УВЕДОМЛЕНИЯ АДМИНИСТРАТОРУ ==========
         async function sendNotificationToAdmins(booking) {
-            await loadAdminsFromDB();  // Обновляем список админов
             const adminIds = ADMIN_IDS;
             const message = `🆕 *НОВАЯ БРОНЬ В HUQQA LOUNGE!*\n\n` +
                 `👤 *Имя:* ${booking.name}\n` +
@@ -694,6 +681,7 @@
         // ========== Данные приложения ==========
         let bookings = [];
         
+        // Меню
         const menuItems = [
             { name: "Бизнес кальян (По будням с 12:00 - 17:00)", price: 1500, category: "Кальяны", subcategory: "Кальяны" },
             { name: "Кальян на классической чаше", price: 1700, category: "Кальяны", subcategory: "Кальяны" },
@@ -784,7 +772,7 @@
         
         async function loadBookings() {
             try {
-                const response = await fetch(`${DB_API}/bookings`);
+                const response = await fetch(SHEET_API);
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 const data = await response.json();
                 bookings = data;
@@ -800,7 +788,7 @@
                 booking.id = Date.now().toString();
                 booking.created_at = new Date().toISOString();
                 booking.phone = userPhone || booking.phone;
-                const response = await fetch(`${DB_API}/bookings`, {
+                const response = await fetch(SHEET_API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify([booking])
@@ -815,7 +803,7 @@
         
         async function updateBooking(bookingId, updatedData) {
             try {
-                const response = await fetch(`${DB_API}/bookings/id/${bookingId}`, {
+                const response = await fetch(`${SHEET_API}/id/${bookingId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedData)
@@ -830,7 +818,7 @@
         
         async function deleteBooking(bookingId) {
             try {
-                const response = await fetch(`${DB_API}/bookings/id/${bookingId}`, {
+                const response = await fetch(`${SHEET_API}/id/${bookingId}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) throw new Error('Ошибка удаления');
@@ -852,13 +840,6 @@
         
         // ========== Админ-панель ==========
         async function renderAdminPanel() {
-            await loadAdminsFromDB();
-            if (!IS_ADMIN()) {
-                showToast("У вас нет прав администратора", true);
-                renderBooking();
-                return;
-            }
-            
             const deleted = await deleteExpiredBookings();
             if (deleted > 0) showToast(`🗑️ Удалено ${deleted} просроченных броней`);
             await loadBookings();
@@ -874,15 +855,13 @@
                     <div class="delete-mode-indicator">
                         🗑️ Брони удаляются автоматически через 24 часа после времени брони<br>
                         ✏️ Нажмите "✏️ Редактировать" для изменения данных<br>
-                        🔔 При новых бронях приходит уведомление в Telegram<br>
-                        👥 Для добавления админа: добавьте ID в таблицу admins
+                        🔔 При новых бронях приходит уведомление в Telegram
                     </div>
                     <div class="button-group">
                         <button class="refresh-btn" id="refreshBtn">🔄 Обновить</button>
                         <button class="broadcast-btn" id="broadcastBtn">📢 Сделать рассылку (текст + фото)</button>
                     </div>
                     <p style="font-size:12px; margin-top:5px;">👥 Зарегистрировано: ${users.length} | 📊 Активных броней: ${activeBookings.length}</p>
-                    <p style="font-size:12px;">👑 Администраторы: ${ADMIN_IDS.join(', ')}</p>
                 </div>
             `;
             
@@ -971,7 +950,7 @@
             });
         }
         
-        // ========== Бронирование ==========
+        // ========== Бронирование (с улучшенными полями ввода) ==========
         async function renderBooking() {
             await loadBookings();
             const myActiveBookings = bookings.filter(b => 
@@ -1163,8 +1142,7 @@
                 renderCurrentTab();
                 return;
             }
-            await loadAdminsFromDB();
-            if (currentTab === 'admin' && IS_ADMIN()) await renderAdminPanel();
+            if (currentTab === 'admin' && IS_ADMIN) await renderAdminPanel();
             else if (currentTab === 'booking') await renderBooking();
             else if (currentTab === 'menu') renderMenu();
             else if (currentTab === 'bonus') renderBonus();
@@ -1179,17 +1157,11 @@
                 modal.className = 'modal';
                 modal.innerHTML = `
                     <div class="modal-content">
-                        <h3>🍽️ Добро пожаловать в Huqqa Lounge, ${TELEGRAM_USER_NAME}!</h3>
-                        <div class="welcome-list">
-                            <p>📅 Бронирование столов</p>
-                            <p>📖 Меню с ценами</p>
-                            <p>🔥 Акции и скидки</p>
-                            <p>🎁 Бонусная карта</p>
-                        </div>
-                        <p>✍️ Укажите ваш номер телефона для продолжения:</p>
+                        <h3>📱 Добро пожаловать в Huqqa Lounge!</h3>
+                        <p>Пожалуйста, укажите ваш номер телефона для бронирования столов.</p>
                         <input type="tel" id="phoneInput" placeholder="+7 (XXX) XXX-XX-XX">
                         <div class="button-group">
-                            <button id="savePhoneBtn">✅ Продолжить</button>
+                            <button id="savePhoneBtn">✅ Сохранить</button>
                         </div>
                     </div>
                 `;
@@ -1209,9 +1181,7 @@
         
         function setupTabs() {
             const tabBar = document.querySelector('.tab-bar');
-            // Вкладка админа добавляется динамически
-            const adminTabExists = document.querySelector('.tab[data-tab="admin"]');
-            if (!adminTabExists) {
+            if (IS_ADMIN && !document.querySelector('.tab[data-tab="admin"]')) {
                 const adminTab = document.createElement('button');
                 adminTab.className = 'tab';
                 adminTab.setAttribute('data-tab', 'admin');
@@ -1231,16 +1201,18 @@
         loadUserData();
         loadBonuses();
         setupTabs();
+        document.querySelector('.tab').classList.add('active');
         renderCurrentTab();
         
         setInterval(async () => {
-            if (currentTab === 'admin' && IS_ADMIN()) {
+            if (IS_ADMIN && currentTab === 'admin') {
                 const deleted = await deleteExpiredBookings();
                 if (deleted > 0) renderAdminPanel();
             }
         }, 5 * 60 * 1000);
         
         console.log("👤 User ID:", TELEGRAM_USER_ID);
+        console.log("👑 Is Admin:", IS_ADMIN);
     </script>
 </body>
 </html>
