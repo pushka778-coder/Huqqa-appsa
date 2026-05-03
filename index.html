@@ -628,10 +628,12 @@
             localStorage.setItem(`huqqa_bonuses_${TELEGRAM_USER_ID}`, JSON.stringify(userBonuses));
         }
         
-        // Функция добавления бонусов (сохранена для совместимости, но не используется)
+        // Функция добавления бонусов (сохранена для истории)
         function addBonus(reason, amount) {
-            // Бонусы отключены по требованию
-            console.log("Бонусы отключены:", reason, amount);
+            userBonuses.balance += amount;
+            userBonuses.history.unshift({ date: new Date().toLocaleString(), reason: reason, amount: amount });
+            if (userBonuses.history.length > 10) userBonuses.history.pop();
+            saveBonuses();
         }
         
         async function loadBookings() {
@@ -900,7 +902,7 @@
                 <div class="card">
                     <h3>📊 Статистика</h3>
                     <p>📌 Активных броней: ${bookingsCount}</p>
-                    <p>🎫 Для получения бонусов обращайтесь к администратору</p>
+                    <p>🎫 Бонусы начисляются за каждое бронирование</p>
                 </div>
                 <div class="card">
                     <h3>📜 История операций</h3>
@@ -917,7 +919,7 @@
                 <h2>🔥 Акции и скидки</h2>
                 ${promos.map(p => `
                     <div class="promo-card">
-                        <strong>${p.name}</strong> — скидка ${p.discount}%<br>
+                        <strong>${p.name}</strong> ${p.discount > 0 ? `— скидка ${p.discount}%` : ''}<br>
                         ${p.desc}<br>
                         <button class="copyPromoBtn" data-code="${p.code}">📋 Скопировать код: ${p.code}</button>
                     </div>
@@ -936,7 +938,7 @@
             });
         }
         
-        // ========== Контакты (обновлённые) ==========
+        // ========== Контакты (обновлённые + карта с точкой) ==========
         function renderContacts() {
             const html = `
                 <h2>📞 Контакты</h2>
@@ -947,8 +949,8 @@
                     <p>🕒 Пт-Сб: 12:00 – 03:00</p>
                     <button id="shareContactBtn">📱 Поделиться номером</button>
                 </div>
-                <iframe width="100%" height="250" frameborder="0" style="border-radius:16px" 
-                    src="https://yandex.ru/map-widget/v1/?ll=37.426336,55.877167&z=15"></iframe>
+                <iframe width="100%" height="250" frameborder="0" style="border-radius:16px; border:none;" 
+                    src="https://yandex.ru/map-widget/v1/?ll=37.4450,55.8890&z=17&pt=37.4450,55.8890,pm2rdm&what=here&text=Молодежная%2015Б%20Химки"></iframe>
             `;
             document.getElementById('app').innerHTML = html;
             document.getElementById('shareContactBtn')?.addEventListener('click', () => showToast(`Номер передан ресторану`));
