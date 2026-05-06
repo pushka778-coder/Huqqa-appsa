@@ -10,7 +10,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: #0a0a0c;
             color: #ffffff;
-            /* Убираем фиксированный отступ снизу, т.к. tab-bar теперь скроллится */
         }
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
         body::before {
@@ -28,11 +27,11 @@
             max-width: 600px; 
             margin: 0 auto; 
             padding: 20px; 
-            padding-bottom: 90px; /* Увеличен отступ для scrollable tab-bar, чтобы контент не перекрывался */
+            padding-bottom: 90px;
             padding-top: env(safe-area-inset-top, 20px);
         }
         
-        /* ---------- НОВЫЙ ДИЗАЙН НИЖНЕЙ ПАНЕЛИ: ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ ---------- */
+        /* Горизонтальный скролл для нижней панели */
         .tab-bar-wrapper {
             position: fixed;
             bottom: 0;
@@ -49,7 +48,6 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
             scrollbar-color: #e84545 #2a2a2a;
-            /* Чтобы скроллбар был красивым, но не мешал */
         }
         .tab-bar-wrapper::-webkit-scrollbar {
             height: 3px;
@@ -71,7 +69,6 @@
             white-space: nowrap;
         }
         
-        /* Стили кнопок (чтобы не ломались на мобильных) */
         .tab {
             display: inline-flex;
             flex-direction: column;
@@ -102,7 +99,7 @@
             font-size: 22px;
         }
         
-        .card, .menu-item, .promo-card, .booking-item, .admin-booking, .booking-card {
+        .card, .menu-item, .promo-card, .booking-card {
             background: linear-gradient(135deg, rgba(18, 18, 22, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
             border-radius: 24px;
             padding: 20px;
@@ -110,7 +107,6 @@
             border: 1px solid rgba(232, 69, 69, 0.25);
             transition: all 0.3s ease;
         }
-        .card:hover, .menu-item:hover { transform: translateY(-3px); border-color: rgba(232, 69, 69, 0.6); }
         .menu-category {
             font-size: 20px;
             font-weight: 700;
@@ -137,7 +133,6 @@
             margin-bottom: 14px;
         }
         input:focus, textarea:focus { outline: none; border-color: #e84545; box-shadow: 0 0 0 3px rgba(232, 69, 69, 0.2); }
-        input:read-only { opacity: 0.7; cursor: default; border-color: rgba(232, 69, 69, 0.3); }
         button {
             background: linear-gradient(135deg, #e84545 0%, #c92a2a 100%);
             color: #ffffff;
@@ -151,7 +146,6 @@
             margin-bottom: 12px;
             transition: all 0.2s ease;
         }
-        button:hover { transform: scale(0.98); box-shadow: 0 8px 24px rgba(232, 69, 69, 0.35); }
         .btn-secondary { background: linear-gradient(135deg, #3a3a45, #2a2a32); margin-bottom: 0; width: auto; padding: 10px 20px; }
         .btn-success { background: linear-gradient(135deg, #28a745, #1e6b3b); }
         .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
@@ -172,7 +166,6 @@
             z-index: 2000;
             animation: fadeInOut 2.5s ease;
             border: 1px solid rgba(232, 69, 69, 0.4);
-            font-weight: 500;
         }
         @keyframes fadeInOut {
             0% { opacity: 0; transform: translateY(20px); }
@@ -201,17 +194,16 @@
             max-width: 500px;
             border: 1px solid rgba(232, 69, 69, 0.4);
         }
-        label { font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block; color: rgba(255, 255, 255, 0.7); }
-        .scanner-container { text-align: center; margin-bottom: 20px; }
-        video { width: 100%; max-width: 400px; border-radius: 24px; border: 2px solid #e84545; margin-bottom: 16px; background: #000; }
-        .loading { text-align: center; padding: 60px; color: rgba(232, 69, 69, 0.6); font-weight: 500; }
-        .info-text { color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; margin-top: 10px; }
-        .status-pending { color: #f0ad4e; background: rgba(240, 173, 78, 0.2); padding: 4px 10px; border-radius: 30px; font-size: 12px; }
-        .status-confirmed { color: #5cb85c; background: rgba(92, 184, 92, 0.2); padding: 4px 10px; border-radius: 30px; font-size: 12px; }
         .bonus-balance { font-size: 48px; font-weight: 800; text-align: center; color: #e84545; margin: 10px 0; }
-        .promo-card { margin-bottom: 12px; }
+        .status-pending { color: #f0ad4e; background: rgba(240, 173, 78, 0.2); padding: 4px 10px; border-radius: 30px; font-size: 12px; display: inline-block; }
+        .status-confirmed { color: #5cb85c; background: rgba(92, 184, 92, 0.2); padding: 4px 10px; border-radius: 30px; font-size: 12px; display: inline-block; }
+        .card-info { text-align: center; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.5); }
+        .history-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .history-date { font-size: 12px; color: rgba(255,255,255,0.5); }
+        .history-amount { color: #e84545; font-weight: 600; }
+        .loading { text-align: center; padding: 60px; color: rgba(232, 69, 69, 0.6); }
+        .info-text { color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; margin-top: 10px; }
         
-        /* адаптив для маленьких экранов */
         @media (max-width: 480px) {
             .tab { padding: 6px 12px; }
             .tab .emoji-big { font-size: 20px; }
@@ -225,13 +217,11 @@
         <div class="loading">⟡ ЗАГРУЗКА ПРЕМИУМ ОПЫТА ⟡</div>
     </div>
 
-    <!-- Обертка для горизонтального скролла нижней панели -->
     <div class="tab-bar-wrapper">
         <div class="tab-bar" id="tabBar">
             <button class="tab" data-tab="booking">📅<span>СТОЛ</span></button>
             <button class="tab" data-tab="menu">📖<span>МЕНЮ</span></button>
-            <!-- Измененная кнопка: колокольчик + текст "ВЫЗОВ КАЛЬЯНЩИКА" -->
-            <button class="tab" data-tab="call">🔔<span>ВЫЗОВ КАЛЬЯНЩИКА</span></button>
+            <button class="tab" data-tab="call">🔔<span>ВЫЗОВ</span></button>
             <button class="tab" data-tab="bonus">🎁<span>КАРТА</span></button>
             <button class="tab" data-tab="promo">🔥<span>АКЦИИ</span></button>
             <button class="tab" data-tab="contacts">📞<span>КОНТАКТЫ</span></button>
@@ -245,7 +235,10 @@
         const USERS_API = "https://api.sheetbest.com/sheets/912a1d92-a006-4a4c-9085-7d6f3722e453";
         const ADMIN_IDS = [755574601];
         const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
-        const STAFF_CHAT_ID = "-1003809247932"; // Замените на актуальный ID чата для вызовов
+        const STAFF_CHAT_ID = "-1003809247932";
+        
+        // ========== НАСТРОЙКИ FRONTPAD API ==========
+        const FRONTPAD_SECRET = "AaQQTaGdtZzarNtd8DtDQBdA43T4d7tE77eQ8NTrAdsQSKSQaaeRBhds8ZfaSBEQzKstk9HKd4nYB7zB7DeyKhQH6YKNidnHQF44FBDHrSsSNReGfk5TyFrrr35D5f9GN4Afr3RGF8keQtQYFGD4aSfsG9TAeS6TGs32fFyQEGYe4z3z6sk69tkFt65AN2ehe78nDs463K9R83b4fnZeH8K45ErEszQAtKNY4EQRdQyaEz5KNRRiNrbFYs"; // ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ КЛЮЧ!
         // ===================================================
         
         let tg = window.Telegram?.WebApp;
@@ -255,23 +248,75 @@
                 ready: () => {},
                 expand: () => {},
                 close: () => {},
-                HapticFeedback: { impactOccurred: () => {} },
-                themeParams: { bg_color: "#0a0a0c", text_color: "#ffffff", button_color: "#e84545" }
+                HapticFeedback: { impactOccurred: () => {} }
             };
         }
         
         tg.expand();
         tg.ready();
-        document.body.style.background = '#0a0a0c';
         
         const TELEGRAM_USER_ID = tg.initDataUnsafe.user.id;
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
         const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
         
-        // ========== Регистрация ==========
+        // ========== FrontPad API ФУНКЦИЯ ==========
+        async function getFrontpadScore(phone) {
+            if (!phone) return null;
+            
+            // Очищаем номер телефона
+            let cleanPhone = phone.replace(/\D/g, '');
+            
+            // Приводим к формату 7XXXXXXXXXX
+            if (cleanPhone.startsWith('8')) {
+                cleanPhone = '7' + cleanPhone.substring(1);
+            } else if (cleanPhone.startsWith('9') && cleanPhone.length === 10) {
+                cleanPhone = '7' + cleanPhone;
+            } else if (cleanPhone.startsWith('+7')) {
+                cleanPhone = '7' + cleanPhone.substring(2);
+            }
+            
+            if (cleanPhone.length !== 11 || !cleanPhone.startsWith('7')) {
+                console.warn('Неверный формат номера:', cleanPhone);
+                return null;
+            }
+            
+            try {
+                const url = "https://app.frontpad.ru/api/index.php?get_client";
+                const formData = new URLSearchParams();
+                formData.append('secret', FRONTPAD_SECRET);
+                formData.append('client_phone', cleanPhone);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+                
+                const result = await response.json();
+                console.log('FrontPad ответ:', result);
+                
+                if (result.result === 'success') {
+                    return {
+                        score: parseInt(result.score) || 0,
+                        name: result.name || null,
+                        card: result.card || null,
+                        sale: result.sale || null
+                    };
+                } else {
+                    console.warn('FrontPad ошибка:', result.error);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Ошибка запроса к FrontPad:', error);
+                return null;
+            }
+        }
+        
+        // ========== Данные пользователя ==========
         let userPhone = null;
         let userBirthday = null;
         let isRegistered = false;
+        let frontpadData = null;
         
         function loadUserData() {
             const saved = localStorage.getItem(`huqqa_user_${TELEGRAM_USER_ID}`);
@@ -296,22 +341,15 @@
                         name: TELEGRAM_USER_NAME,
                         phone: phone,
                         birthday: birthday,
-                        registeredAt: new Date().toISOString(),
-                        forceReauth: "false"
+                        registeredAt: new Date().toISOString()
                     };
                     await fetch(USERS_API, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify([newUser])
                     });
-                    addBonus("⟡ Регистрация в Huqqa Lounge ⟡", 300);
-                    showToast("⟡ +300 бонусов за регистрацию! ⟡");
-                } else if (existing.phone !== phone || existing.birthday !== birthday) {
-                    await fetch(`${USERS_API}/id/${existing.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phone: phone, birthday: birthday })
-                    });
+                    addBonus("Регистрация в Huqqa Lounge", 300);
+                    showToast("✨ +300 бонусов за регистрацию!");
                 }
                 
                 userPhone = phone;
@@ -319,18 +357,50 @@
                 isRegistered = true;
                 localStorage.setItem(`huqqa_user_${TELEGRAM_USER_ID}`, JSON.stringify({
                     phone: phone,
-                    birthday: birthday,
-                    registeredAt: new Date().toISOString()
+                    birthday: birthday
                 }));
+                
+                // Синхронизируем бонусы с FrontPad после регистрации
+                await syncBonusesWithFrontpad();
                 
                 return true;
             } catch (error) {
-                console.error("Ошибка сохранения:", error);
+                console.error("Ошибка:", error);
                 return false;
             }
         }
         
-        // Бонусная система
+        // ========== Синхронизация с FrontPad ==========
+        async function syncBonusesWithFrontpad() {
+            if (!userPhone) {
+                console.log('Нет номера телефона для синхронизации');
+                return null;
+            }
+            
+            console.log('Синхронизация с FrontPad для номера:', userPhone);
+            
+            const fpData = await getFrontpadScore(userPhone);
+            if (fpData && fpData.score !== null) {
+                frontpadData = fpData;
+                if (userBonuses.balance !== fpData.score) {
+                    userBonuses.balance = fpData.score;
+                    userBonuses.history.unshift({
+                        date: new Date().toLocaleString(),
+                        reason: "Синхронизация с FrontPad",
+                        amount: fpData.score
+                    });
+                    if (userBonuses.history.length > 20) userBonuses.history.pop();
+                    saveBonuses();
+                    showToast(`🔄 Бонусы обновлены: ${fpData.score} баллов`);
+                }
+                return fpData;
+            } else {
+                console.log('Не удалось получить данные из FrontPad');
+                return null;
+            }
+        }
+        
+        // ========== Бонусная система ==========
         let userBonuses = { balance: 0, history: [] };
         function loadBonuses() {
             const saved = localStorage.getItem(`huqqa_bonuses_${TELEGRAM_USER_ID}`);
@@ -341,10 +411,11 @@
         function addBonus(reason, amount) {
             userBonuses.balance += amount;
             userBonuses.history.unshift({ date: new Date().toLocaleString(), reason: reason, amount: amount });
-            if (userBonuses.history.length > 10) userBonuses.history.pop();
+            if (userBonuses.history.length > 20) userBonuses.history.pop();
             saveBonuses();
         }
         
+        // ========== Бронирования ==========
         let bookings = [];
         async function loadBookings() {
             try {
@@ -364,19 +435,17 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== МОДУЛЬ ВЫЗОВА КАЛЬЯНЩИКА ПО QR (колокольчик) ==========
+        // ========== QR-сканер для вызова ==========
         let html5QrCode = null;
         
         async function startScanner() {
             const scannerContainer = document.createElement('div');
             scannerContainer.className = 'modal';
-            scannerContainer.id = 'scannerModal';
             scannerContainer.innerHTML = `
                 <div class="modal-content" style="text-align: center;">
                     <h3>🔔 ВЫЗОВ КАЛЬЯНЩИКА</h3>
                     <p style="margin-bottom: 12px;">📷 Наведите камеру на QR-код стола</p>
                     <div id="qr-reader" style="width: 100%; margin: 0 auto;"></div>
-                 
                     <div class="button-group" style="margin-top: 20px;">
                         <button id="closeScannerBtn" class="btn-secondary">❌ ОТМЕНА</button>
                     </div>
@@ -385,11 +454,10 @@
             document.body.appendChild(scannerContainer);
             
             html5QrCode = new Html5Qrcode("qr-reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
             
             try {
-                await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-                    html5QrCode.stop().catch(err => console.log(err));
+                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decodedText) => {
+                    html5QrCode.stop();
                     scannerContainer.remove();
                     
                     if (decodedText.startsWith("Huqqa-")) {
@@ -397,20 +465,20 @@
                         if (tableNumber && !isNaN(parseInt(tableNumber))) {
                             showCallForm(tableNumber);
                         } else {
-                            showToast("❌ Неверный формат QR (номер стола должен быть числом)", true);
+                            showToast("❌ Неверный формат QR-кода", true);
                         }
                     } else {
-                        showToast("❌ Неверный QR-код. Должен начинаться с 'Huqqa-'", true);
+                        showToast("❌ Неверный QR-код", true);
                     }
-                }, (error) => { /* игнорируем промежуточные ошибки */ });
+                });
             } catch (err) {
                 console.error(err);
-                showToast("❌ Не удалось получить доступ к камере.", true);
+                showToast("❌ Не удалось получить доступ к камере", true);
                 scannerContainer.remove();
             }
             
             document.getElementById('closeScannerBtn')?.addEventListener('click', () => {
-                if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop().catch(e => console.log(e));
+                if (html5QrCode && html5QrCode.isScanning) html5QrCode.stop();
                 scannerContainer.remove();
             });
         }
@@ -421,14 +489,11 @@
             modal.innerHTML = `
                 <div class="modal-content">
                     <h3>🔔 ВЫЗОВ КАЛЬЯНЩИКА</h3>
-                    <label>🍽️ НОМЕР СТОЛА (автоматически)</label>
-                    <input type="text" id="callTableNumber" value="${tableNumber}" readonly>
-                    
-                    <label>💬 ДОПОЛНИТЕЛЬНО (пожелания / уголь / фрукт)</label>
-                    <textarea id="callMessage" rows="3" placeholder="Например: Принесите уголь, поменяйте чашу..."></textarea>
-                    
+                    <label>🍽️ СТОЛ №${tableNumber}</label>
+                    <label>💬 СООБЩЕНИЕ</label>
+                    <textarea id="callMessage" rows="3" placeholder="Например: принесите уголь, поменяйте чашу..."></textarea>
                     <div class="button-group">
-                        <button id="sendCallBtn" class="btn-success">📤 ОТПРАВИТЬ ВЫЗОВ</button>
+                        <button id="sendCallBtn" class="btn-success">📤 ОТПРАВИТЬ</button>
                         <button id="closeCallBtn" class="btn-secondary">ОТМЕНА</button>
                     </div>
                 </div>
@@ -436,187 +501,178 @@
             document.body.appendChild(modal);
             
             document.getElementById('sendCallBtn').addEventListener('click', async () => {
-                const table = document.getElementById('callTableNumber').value;
                 const message = document.getElementById('callMessage').value;
-                const userName = TELEGRAM_USER_NAME;
-                const userPhoneNumber = userPhone || "Не указан";
-                
-                const staffMessage = `🆘 *ВЫЗОВ КАЛЬЯНЩИКА* 🆘\n\n` +
-                    `👤 *Гость:* ${userName}\n` +
-                    `📞 *Телефон:* ${userPhoneNumber}\n` +
-                    `🍽️ *Стол №:* ${table}\n` +
-                    `💬 *Сообщение:* ${message || "—"}\n` +
-                    `🕐 *Время:* ${new Date().toLocaleString()}\n\n` +
-                    `_Необходимо подойти к столу._`;
+                const staffMessage = `🆘 *ВЫЗОВ КАЛЬЯНЩИКА*\n\n👤 *Гость:* ${TELEGRAM_USER_NAME}\n📞 *Телефон:* ${userPhone || "Не указан"}\n🍽️ *Стол:* ${tableNumber}\n💬 *Сообщение:* ${message || "—"}\n🕐 *Время:* ${new Date().toLocaleString()}`;
                 
                 try {
-                    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: STAFF_CHAT_ID,
-                            text: staffMessage,
-                            parse_mode: 'Markdown'
-                        })
+                        body: JSON.stringify({ chat_id: STAFF_CHAT_ID, text: staffMessage, parse_mode: 'Markdown' })
                     });
-                    
-                    if (response.ok) {
-                        showToast("✅ Вызов отправлен! Кальянщик подойдёт к столу.");
-                        modal.remove();
-                    } else {
-                        showToast("❌ Ошибка отправки. Попробуйте позже.", true);
-                    }
+                    showToast("✅ Вызов отправлен!");
+                    modal.remove();
                 } catch (error) {
-                    console.error(error);
-                    showToast("❌ Ошибка сети, повторите.", true);
+                    showToast("❌ Ошибка отправки", true);
                 }
             });
             
-            document.getElementById('closeCallBtn').addEventListener('click', () => {
-                modal.remove();
-            });
+            document.getElementById('closeCallBtn').addEventListener('click', () => modal.remove());
         }
         
-        // ========== Вкладка "Вызов" с новой иконкой ==========
+        // ========== Вкладки ==========
         async function renderCall() {
             const html = `
                 <div class="restaurant-header">
                     <h1>🔔 ВЫЗОВ КАЛЬЯНЩИКА</h1>
-                    <p style="opacity:0.7;">Отсканируйте QR-код на столе, чтобы позвать персонал</p>
+                    <p>Отсканируйте QR-код на столе</p>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div style="font-size: 64px; margin-bottom: 20px;">🔔</div>
-                    <button id="scanQrBtn" style="background: linear-gradient(135deg, #e84545, #c92a2a); margin-bottom: 0;">📷 СКАНИРОВАТЬ QR-КОД СТОЛА</button>
-                    <p class="info-text" style="margin-top: 20px;">✧ Код выглядит как <strong>Huqqa-101</strong><br>✧ После сканирования отправьте сообщение</p>
+                    <button id="scanQrBtn">📷 СКАНИРОВАТЬ QR-КОД</button>
+                    <p class="info-text">QR-код должен быть в формате: Huqqa-XXX</p>
                 </div>
             `;
             document.getElementById('app').innerHTML = html;
             document.getElementById('scanQrBtn').addEventListener('click', () => startScanner());
         }
         
-        // ========== Остальные вкладки (брони, меню, бонусы и т.д.) ==========
         async function renderBooking() {
             await loadBookings();
-            const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b));
+            const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID));
             const html = `
-                <div class="restaurant-header"><h1>⟡ HUQQA LOUNGE ⟡</h1><p style="opacity:0.6;">ЗАБРОНИРУЙТЕ СТОЛИК</p></div>
+                <div class="restaurant-header"><h1>⟡ HUQQA LOUNGE ⟡</h1><p>ЗАБРОНИРУЙТЕ СТОЛИК</p></div>
                 <div class="card">
-                    <label>👤 ВАШЕ ИМЯ</label><input type="text" id="name" value="${TELEGRAM_USER_NAME}">
-                    <label>📞 ТЕЛЕФОН</label><input type="tel" id="phone" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
-                    <label>📅 ДАТА</label><input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
-                    <label>⏰ ВРЕМЯ</label><input type="time" id="time">
-                    <label>👥 ГОСТЕЙ</label><input type="number" id="guests" min="1" max="10" value="2">
-                    <button id="submitBookingBtn">⟡ ЗАБРОНИРОВАТЬ СТОЛ ⟡</button>
+                    <input type="text" id="name" placeholder="Имя" value="${TELEGRAM_USER_NAME}">
+                    <input type="tel" id="phone" placeholder="Телефон" value="${userPhone || ''}" ${userPhone ? 'readonly' : ''}>
+                    <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
+                    <input type="time" id="time">
+                    <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
+                    <button id="submitBookingBtn">ЗАБРОНИРОВАТЬ</button>
                 </div>
-                <h3>📋 МОИ БРОНИРОВАНИЯ</h3>
-                ${myActiveBookings.length === 0 ? '<p style="opacity:0.5;">У вас нет активных броней</p>' : 
-                    myActiveBookings.map(b => `<div class="booking-card"><strong>${b.date} в ${b.time}</strong><br>ГОСТЕЙ: ${b.guests} | СТАТУС: ${b.status === 'pending' ? '<span class="status-pending">ОЖИДАЕТ</span>' : '<span class="status-confirmed">ПОДТВЕРЖДЕНО</span>'}</div>`).join('')}
+                <h3>МОИ БРОНИ</h3>
+                ${myActiveBookings.length === 0 ? '<p>Нет активных броней</p>' : myActiveBookings.map(b => `<div class="booking-card"><strong>${b.date} ${b.time}</strong><br>${b.guests} чел. | ${b.status === 'pending' ? '<span class="status-pending">ОЖИДАЕТ</span>' : '<span class="status-confirmed">ПОДТВЕРЖДЕНО</span>'}</div>`).join('')}
             `;
             document.getElementById('app').innerHTML = html;
             document.getElementById('submitBookingBtn')?.addEventListener('click', async () => {
-                const name = document.getElementById('name').value;
-                const phone = document.getElementById('phone').value;
-                const date = document.getElementById('date').value;
-                const time = document.getElementById('time').value;
-                const guests = parseInt(document.getElementById('guests').value);
-                if (!name || !phone || !date || !time) { showToast("Заполните все поля", true); return; }
-                const newBooking = { userId: String(TELEGRAM_USER_ID), name, phone, date, time, guests, status: 'pending' };
-                const saved = await saveBooking(newBooking);
-                if (saved) { await sendNotificationToAdmins(newBooking); showToast(`✅ Стол забронирован!`); setTimeout(() => renderBooking(), 1000); }
+                const newBooking = {
+                    userId: String(TELEGRAM_USER_ID),
+                    name: document.getElementById('name').value,
+                    phone: document.getElementById('phone').value,
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    guests: parseInt(document.getElementById('guests').value),
+                    status: 'pending',
+                    id: Date.now().toString()
+                };
+                if (!newBooking.name || !newBooking.phone || !newBooking.date || !newBooking.time) {
+                    showToast("Заполните все поля", true);
+                    return;
+                }
+                await fetch(SHEET_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([newBooking]) });
+                showToast("✅ Стол забронирован!");
+                setTimeout(() => renderBooking(), 1000);
             });
-        }
-        
-        function isBookingExpired(booking) {
-            if (!booking.date || !booking.time) return false;
-            const bookingDateTime = new Date(`${booking.date}T${booking.time}`);
-            const now = new Date();
-            const hoursDiff = (now - bookingDateTime) / (1000 * 60 * 60);
-            return hoursDiff > 24;
-        }
-        
-        async function saveBooking(booking) {
-            try {
-                booking.id = Date.now().toString();
-                booking.created_at = new Date().toISOString();
-                booking.phone = userPhone || booking.phone;
-                const response = await fetch(SHEET_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([booking]) });
-                return response.ok ? booking : null;
-            } catch { showToast("Ошибка сохранения!", true); return null; }
-        }
-        
-        async function sendNotificationToAdmins(booking) {
-            const message = `🆕 *НОВАЯ БРОНЬ!*\n👤 ${booking.name}\n📞 ${booking.phone}\n📅 ${booking.date} ${booking.time}\n👥 ${booking.guests} чел.`;
-            for (const adminId of ADMIN_IDS) {
-                try {
-                    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: adminId, text: message, parse_mode: 'Markdown' }) });
-                } catch (error) {}
-            }
         }
         
         function renderMenu() {
-            const menuItems = [
-                { name: "Бизнес кальян (Пн-Пт 12:00-17:00)", price: 1500, category: "Кальяны" },
-                { name: "Кальян на классической чаше", price: 1700, category: "Кальяны" },
-                { name: "Премиум кальян с сигарным листом", price: 1900, category: "Кальяны" },
-                { name: "Авторский кальян на цитрусовый", price: 2500, category: "Кальяны" },
-                { name: "Энергетик RedBull", price: 300, category: "Напитки" },
-                { name: "Лимонад Star Bar Craft", price: 350, category: "Напитки" },
-                { name: "Пиво Корона Экстра", price: 400, category: "Напитки" },
-                { name: "Авторский Банановый Улун", price: 600, category: "Чаи" },
-                { name: "Эспрессо", price: 150, category: "Кофе" },
-                { name: "СуперМясная пицца", price: 1000, category: "Пиццы" },
-                { name: "Апельсин/Грейпфрут", price: 150, category: "Добавки" }
-            ];
-            let html = `<h2>📖 НАШЕ МЕНЮ</h2>`;
-            const categories = [...new Set(menuItems.map(i => i.category))];
-            categories.forEach(cat => {
-                html += `<div class="menu-category">${cat}</div>`;
-                menuItems.filter(i => i.category === cat).forEach(item => { html += `<div class="menu-item"><strong>${item.name}</strong> <span style="color:#e84545; font-weight:600;">${item.price} ₽</span></div>`; });
-            });
-            document.getElementById('app').innerHTML = html;
+            const menuHtml = `
+                <h2>📖 НАШЕ МЕНЮ</h2>
+                <div class="menu-category">🔥 КАЛЬЯНЫ</div>
+                <div class="menu-item"><strong>Бизнес кальян</strong><span>1500 ₽</span></div>
+                <div class="menu-item"><strong>Классический кальян</strong><span>1700 ₽</span></div>
+                <div class="menu-item"><strong>Премиум кальян</strong><span>1900 ₽</span></div>
+                <div class="menu-item"><strong>Авторский кальян</strong><span>2500 ₽</span></div>
+                <div class="menu-category">🍹 НАПИТКИ</div>
+                <div class="menu-item"><strong>RedBull</strong><span>300 ₽</span></div>
+                <div class="menu-item"><strong>Лимонад Star Bar</strong><span>350 ₽</span></div>
+                <div class="menu-item"><strong>Пиво Корона</strong><span>400 ₽</span></div>
+                <div class="menu-category">🍕 ЕДА</div>
+                <div class="menu-item"><strong>СуперМясная пицца</strong><span>1000 ₽</span></div>
+            `;
+            document.getElementById('app').innerHTML = menuHtml;
         }
         
-        function renderBonus() {
-            const html = `<h2>🎁 МОЯ КАРТА ГОСТЯ</h2>
-                <div class="card"><h3>💰 БОНУСНЫЙ БАЛАНС</h3><div class="bonus-balance">${userBonuses.balance}</div><p>100 бонусов = 50₽ скидка</p></div>
-                <div class="card"><h3>📜 ИСТОРИЯ НАЧИСЛЕНИЙ</h3>${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : userBonuses.history.map(h => `<div>${h.date} — +${h.amount} (${h.reason})</div>`).join('')}</div>`;
+        async function renderBonus() {
+            document.getElementById('app').innerHTML = '<div class="loading">🔄 Загрузка бонусов...</div>';
+            
+            // Синхронизируем с FrontPad при открытии вкладки
+            await syncBonusesWithFrontpad();
+            
+            const balanceInRubles = (userBonuses.balance / 2).toFixed(0);
+            const fpInfo = frontpadData ? `<div class="card-info">🎫 Карта: ${frontpadData.card || '—'} | Скидка: ${frontpadData.sale || '0'}%</div>` : '<div class="card-info">🔄 Данные из FrontPad не получены</div>';
+            
+            const html = `
+                <h2>🎁 МОЯ КАРТА ГОСТЯ</h2>
+                <div class="card">
+                    <h3>💰 БОНУСНЫЙ БАЛАНС</h3>
+                    <div class="bonus-balance">${userBonuses.balance}</div>
+                    <p>100 бонусов = 50₽ скидки</p>
+                    <p>≈ ${balanceInRubles} ₽ кэшбэка</p>
+                    ${fpInfo}
+                    <button id="syncBtn">🔄 ОБНОВИТЬ БОНУСЫ</button>
+                </div>
+                <div class="card">
+                    <h3>📜 ИСТОРИЯ</h3>
+                    ${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : userBonuses.history.slice(0, 10).map(h => `
+                        <div class="history-item">
+                            <div class="history-date">${h.date}</div>
+                            <div><span class="history-amount">+${h.amount}</span> — ${h.reason}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
             document.getElementById('app').innerHTML = html;
+            document.getElementById('syncBtn')?.addEventListener('click', async () => {
+                showToast("🔄 Синхронизация...");
+                await syncBonusesWithFrontpad();
+                await renderBonus();
+            });
         }
         
         function renderPromo() {
-            const promos = [
-                { name: "🕒 СЧАСТЛИВЫЕ ЧАСЫ", desc: "Пн-Пт с 12:00 до 17:00. Кальян 1500₽!", code: "HAPPY1500" },
-                { name: "🎂 ДЕНЬ РОЖДЕНИЯ", desc: "Скидка 20% на весь счёт", discount: 20, code: "BIRTHDAY20" }
-            ];
-            const html = `<h2>🔥 АКЦИИ</h2>${promos.map(p => `<div class="promo-card"><strong>${p.name}</strong><br>${p.desc}<br><button class="copyPromoBtn" data-code="${p.code}">📋 КОД: ${p.code}</button></div>`).join('')}`;
+            const html = `<h2>🔥 АКЦИИ</h2>
+                <div class="card"><strong>🕒 СЧАСТЛИВЫЕ ЧАСЫ</strong><br>Пн-Пт 12:00-17:00, кальян 1500₽<br><button class="copyPromoBtn" data-code="HAPPY1500">📋 КОД: HAPPY1500</button></div>
+                <div class="card"><strong>🎂 ДЕНЬ РОЖДЕНИЯ</strong><br>Скидка 20% на весь счёт<br><button class="copyPromoBtn" data-code="BIRTHDAY20">📋 КОД: BIRTHDAY20</button></div>`;
             document.getElementById('app').innerHTML = html;
-            document.querySelectorAll('.copyPromoBtn').forEach(btn => { btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.code); showToast(`✅ Код скопирован`); }); });
+            document.querySelectorAll('.copyPromoBtn').forEach(btn => btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.code); showToast("✅ Код скопирован"); }));
         }
         
         function renderContacts() {
-            const html = `<h2>📞 КОНТАКТЫ</h2><div class="card"><p>📍 ул. Молодежная 15Б, Химки</p><p>📞 <a href="tel:+79099846677" style="color:#e84545;">+7 (909) 984-66-77</a></p><p>🕒 Вс-Чт: 12:00 – 02:00</p><p>🕒 Пт-Сб: 12:00 – 03:00</p><p>🌟 Instagram: @huqqa_lounge</p></div>`;
+            const html = `<h2>📞 КОНТАКТЫ</h2>
+                <div class="card"><p>📍 ул. Молодежная 15Б, Химки</p><p>📞 <a href="tel:+79099846677" style="color:#e84545;">+7 (909) 984-66-77</a></p><p>🕒 Вс-Чт: 12:00 – 02:00</p><p>🕒 Пт-Сб: 12:00 – 03:00</p><p>📱 <a href="https://t.me/huqqa_lounge" style="color:#e84545;">@huqqa_lounge</a></p></div>`;
             document.getElementById('app').innerHTML = html;
         }
         
-        // Роутинг с активной вкладкой
+        // ========== Роутинг ==========
         let currentTab = "booking";
         
         async function renderCurrentTab() {
-            if (!isRegistered) { await showPhoneRegistrationModal(); renderCurrentTab(); return; }
+            if (!isRegistered) {
+                await showPhoneRegistrationModal();
+                renderCurrentTab();
+                return;
+            }
             if (currentTab === 'booking') await renderBooking();
             else if (currentTab === 'menu') renderMenu();
             else if (currentTab === 'call') await renderCall();
-            else if (currentTab === 'bonus') renderBonus();
+            else if (currentTab === 'bonus') await renderBonus();
             else if (currentTab === 'promo') renderPromo();
             else if (currentTab === 'contacts') renderContacts();
-            else await renderBooking();
         }
         
         function showPhoneRegistrationModal() {
             return new Promise((resolve) => {
                 const modal = document.createElement('div');
                 modal.className = 'modal';
-                modal.innerHTML = `<div class="modal-content"><h3>⟡ HUQQA LOUNGE ⟡</h3><p style="text-align:center;">Укажите ваши данные для бонусной карты</p><p style="text-align:center; color:#e84545;">🎁 +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ</p><label>📞 ТЕЛЕФОН</label><input type="tel" id="phoneInput" placeholder="+7 XXX XXX-XX-XX"><label>🎂 ДАТА РОЖДЕНИЯ</label><input type="date" id="birthdayInput" max="${new Date().toISOString().split('T')[0]}"><div class="button-group"><button id="savePhoneBtn">⟡ ПРОДОЛЖИТЬ ⟡</button></div></div>`;
+                modal.innerHTML = `<div class="modal-content">
+                    <h3>⟡ HUQQA LOUNGE ⟡</h3>
+                    <p>Укажите ваши данные</p>
+                    <p style="color:#e84545;">🎁 +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ</p>
+                    <input type="tel" id="phoneInput" placeholder="+7 XXX XXX-XX-XX">
+                    <input type="date" id="birthdayInput" max="${new Date().toISOString().split('T')[0]}">
+                    <button id="savePhoneBtn">ПРОДОЛЖИТЬ</button>
+                </div>`;
                 document.body.appendChild(modal);
                 document.getElementById('savePhoneBtn')?.addEventListener('click', async () => {
                     const phone = document.getElementById('phoneInput').value.trim();
@@ -631,14 +687,6 @@
         
         function setupTabs() {
             const tabBar = document.getElementById('tabBar');
-            if (IS_ADMIN && !document.querySelector('.tab[data-tab="admin"]')) {
-                const adminTab = document.createElement('button');
-                adminTab.className = 'tab';
-                adminTab.setAttribute('data-tab', 'admin');
-                adminTab.innerHTML = '👑<span>АДМИН</span>';
-                tabBar.appendChild(adminTab);
-                // можно добавить логику админ-панели отдельно, но для краткости опускаем
-            }
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     currentTab = tab.dataset.tab;
@@ -649,12 +697,18 @@
             });
         }
         
+        // ========== ЗАПУСК ==========
         loadUserData();
         loadBonuses();
         setupTabs();
-        // Активируем первую вкладку по умолчанию
         document.querySelector('.tab')?.classList.add('active');
-        renderCurrentTab();
+        
+        // Если пользователь зарегистрирован, синхронизируем бонусы
+        if (isRegistered && userPhone) {
+            syncBonusesWithFrontpad().then(() => renderCurrentTab());
+        } else {
+            renderCurrentTab();
+        }
     </script>
 </body>
 </html>
