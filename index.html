@@ -147,7 +147,7 @@
             margin-bottom: 12px;
             transition: all 0.2s ease;
         }
-        button:hover { transform: scale(0.98); }
+        button:hover { transform: scale(0.98); box-shadow: 0 8px 24px rgba(232, 69, 69, 0.35); }
         .btn-secondary { background: linear-gradient(135deg, #3a3a45, #2a2a32); margin-bottom: 0; width: auto; padding: 10px 20px; }
         .btn-success { background: linear-gradient(135deg, #28a745, #1e6b3b); }
         .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
@@ -255,8 +255,8 @@
         const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
         const STAFF_CHAT_ID = "-1003809247932";
         
-        // URL сервера - ТОТ ЖЕ, ЧТО В ТЕСТОВОМ КОДЕ
-        const BONUS_API_URL = "http://45.84.1.161:3000";
+        // Используем CORS прокси для обхода блокировки
+        const BONUS_API_URL = "https://cors-anywhere.herokuapp.com/http://45.84.1.161:3000";
         
         // ===================================================
         
@@ -340,7 +340,6 @@
                     registeredAt: new Date().toISOString()
                 }));
                 
-                // Обновляем бонусы после регистрации
                 await updateRealBonuses();
                 return true;
             } catch (error) {
@@ -349,7 +348,7 @@
             }
         }
         
-        // ========== ПОЛУЧЕНИЕ РЕАЛЬНЫХ БОНУСОВ - ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+        // ========== ПОЛУЧЕНИЕ РЕАЛЬНЫХ БОНУСОВ ==========
         async function updateRealBonuses() {
             if (!userPhone) {
                 console.log("Номер телефона не указан");
@@ -375,11 +374,7 @@
                 } else {
                     realBonuses = 0;
                     localStorage.setItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`, 0);
-                    if (data.message) {
-                        showToast(`⚠️ ${data.message}`, true);
-                    } else {
-                        showToast(`⚠️ Номер не зарегистрирован в системе лояльности`, true);
-                    }
+                    showToast(`⚠️ Номер не зарегистрирован в системе лояльности`, true);
                     return 0;
                 }
             } catch (error) {
@@ -546,7 +541,7 @@
             document.getElementById('scanQrBtn').addEventListener('click', () => startScanner());
         }
         
-        // ========== ОСТАЛЬНЫЕ ВКЛАДКИ ==========
+        // ========== ОСТАЛЬНЫЕ ВКЛАДКИ (упрощенные для быстродействия) ==========
         async function renderBooking() {
             await loadBookings();
             const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && !isBookingExpired(b));
