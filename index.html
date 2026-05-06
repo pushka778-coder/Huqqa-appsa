@@ -344,51 +344,58 @@
             }
         }
         
-        async function updateRealBonuses() {
-            if (!userPhone) {
-                console.log("Номер телефона не указан");
-                return null;
-            }
-            
-            try {
-                // Показываем индикатор загрузки
-                const bonusElement = document.querySelector('.bonus-balance');
-                if (bonusElement && !bonusElement.querySelector('.bonus-loader')) {
-                    const originalText = bonusElement.innerHTML;
-                    bonusElement.innerHTML = '<div class="bonus-loader"></div>';
-                }
-                
-                // Получаем реальные бонусы
-                const bonuses = await fetchRealBonuses(userPhone);
-                
-                if (bonuses !== null) {
-                    realBonuses = bonuses;
-                    // Сохраняем в localStorage
-                    localStorage.setItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`, realBonuses);
-                    localStorage.setItem(`huqqa_bonus_updated_${TELEGRAM_USER_ID}`, Date.now());
-                    
-                    showToast(`🔄 Бонусы обновлены: ${realBonuses} баллов`);
-                    return realBonuses;
-                } else {
-                    // Если не удалось получить, используем сохраненные
-                    const saved = localStorage.getItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`);
-                    if (saved) {
-                        realBonuses = parseInt(saved);
-                        showToast(`⚠️ Используются сохраненные бонусы: ${realBonuses}`);
-                        return realBonuses;
-                    }
-                    return null;
-                }
-            } catch (error) {
-                console.error("Ошибка обновления бонусов:", error);
-                return null;
-            } finally {
-                // Обновляем отображение если мы на странице бонусов
-                if (currentTab === 'bonus') {
-                    renderBonus();
-                }
-            }
+       async function updateRealBonuses() {
+    if (!userPhone) {
+        console.log("Номер телефона не указан");
+        return null;
+    }
+    
+    try {
+        // Показываем индикатор загрузки
+        const bonusElement = document.querySelector('.bonus-balance');
+        if (bonusElement) {
+            bonusElement.innerHTML = '<div class="bonus-loader"></div>';
         }
+        
+        // ВАЖНО: Замените URL на ваш реальный сервер
+        const API_URL = 'http://45.84.1.161:3000'; // ЗАМЕНИТЕ!
+        
+        const response = await fetch(`${API_URL}/api/get-bonus?phone=${encodeURIComponent(userPhone)}`);
+        const data = await response.json();
+        
+        if (data.success && typeof data.bonuses === 'number') {
+            // Получили реальные бонусы из Frontpad
+            realBonuses = data.bonuses;
+            
+            // Сохраняем в localStorage
+            localStorage.setItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`, realBonuses);
+            localStorage.setItem(`huqqa_bonus_updated_${TELEGRAM_USER_ID}`, Date.now());
+            localStorage.setItem(`huqqa_bonus_name_${TELEGRAM_USER_ID}`, data.name || '');
+            
+            showToast(`✅ Бонусы: ${realBonuses}`);
+            return realBonuses;
+        } else {
+            // Номер не найден в Frontpad - ставим 0
+            realBonuses = 0;
+            localStorage.setItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`, 0);
+            showToast(`⚠️ Номер не зарегистрирован в системе лояльности`, true);
+            return 0;
+        }
+    } catch (error) {
+        console.error("Ошибка получения бонусов:", error);
+        showToast(`❌ Ошибка подключения к серверу бонусов`, true);
+        
+        // В случае ошибки используем сохраненные бонусы или 0
+        const saved = localStorage.getItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`);
+        realBonuses = saved ? parseInt(saved) : 0;
+        return realBonuses;
+    } finally {
+        // Обновляем отображение на странице бонусов
+        if (currentTab === 'bonus') {
+            renderBonus();
+        }
+    }
+}
         
         function loadUserData() {
             const saved = localStorage.getItem(`huqqa_user_${TELEGRAM_USER_ID}`);
