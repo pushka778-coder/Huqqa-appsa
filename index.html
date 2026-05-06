@@ -147,7 +147,7 @@
             margin-bottom: 12px;
             transition: all 0.2s ease;
         }
-        button:hover { transform: scale(0.98); box-shadow: 0 8px 24px rgba(232, 69, 69, 0.35); }
+        button:hover { transform: scale(0.98); }
         .btn-secondary { background: linear-gradient(135deg, #3a3a45, #2a2a32); margin-bottom: 0; width: auto; padding: 10px 20px; }
         .btn-success { background: linear-gradient(135deg, #28a745, #1e6b3b); }
         .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
@@ -255,7 +255,7 @@
         const BOT_TOKEN = "8696170529:AAGtVDCEntgnKdvgaEdQ44DZnnBORHjAyNM";
         const STAFF_CHAT_ID = "-1003809247932";
         
-        // API ДЛЯ ПОЛУЧЕНИЯ БОНУСОВ (ВАШ СЕРВЕР)
+        // URL сервера - ТОТ ЖЕ, ЧТО В ТЕСТОВОМ КОДЕ
         const BONUS_API_URL = "http://45.84.1.161:3000";
         
         // ===================================================
@@ -340,6 +340,7 @@
                     registeredAt: new Date().toISOString()
                 }));
                 
+                // Обновляем бонусы после регистрации
                 await updateRealBonuses();
                 return true;
             } catch (error) {
@@ -348,7 +349,7 @@
             }
         }
         
-        // ========== ПОЛУЧЕНИЕ РЕАЛЬНЫХ БОНУСОВ ИЗ FRONTPAD ==========
+        // ========== ПОЛУЧЕНИЕ РЕАЛЬНЫХ БОНУСОВ - ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
         async function updateRealBonuses() {
             if (!userPhone) {
                 console.log("Номер телефона не указан");
@@ -356,13 +357,13 @@
             }
             
             try {
-                const bonusElement = document.querySelector('.bonus-balance');
-                if (bonusElement) {
-                    bonusElement.innerHTML = '<div class="bonus-loader"></div>';
-                }
+                const url = `${BONUS_API_URL}/api/get-bonus?phone=${encodeURIComponent(userPhone)}`;
+                console.log("Запрос бонусов:", url);
                 
-                const response = await fetch(`${BONUS_API_URL}/api/get-bonus?phone=${encodeURIComponent(userPhone)}`);
+                const response = await fetch(url);
                 const data = await response.json();
+                
+                console.log("Ответ сервера:", data);
                 
                 if (data.success && typeof data.bonuses === 'number') {
                     realBonuses = data.bonuses;
@@ -374,20 +375,20 @@
                 } else {
                     realBonuses = 0;
                     localStorage.setItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`, 0);
-                    showToast(`⚠️ Номер не зарегистрирован в системе лояльности`, true);
+                    if (data.message) {
+                        showToast(`⚠️ ${data.message}`, true);
+                    } else {
+                        showToast(`⚠️ Номер не зарегистрирован в системе лояльности`, true);
+                    }
                     return 0;
                 }
             } catch (error) {
                 console.error("Ошибка получения бонусов:", error);
-                showToast(`❌ Ошибка подключения к серверу бонусов`, true);
+                showToast(`❌ Ошибка: ${error.message}`, true);
                 
                 const saved = localStorage.getItem(`huqqa_real_bonus_${TELEGRAM_USER_ID}`);
                 realBonuses = saved ? parseInt(saved) : 0;
                 return realBonuses;
-            } finally {
-                if (currentTab === 'bonus') {
-                    renderBonus();
-                }
             }
         }
         
@@ -680,7 +681,11 @@
         let currentTab = "booking";
         
         async function renderCurrentTab() {
-            if (!isRegistered) { await showPhoneRegistrationModal(); renderCurrentTab(); return; }
+            if (!isRegistered) { 
+                await showPhoneRegistrationModal(); 
+                renderCurrentTab(); 
+                return; 
+            }
             if (currentTab === 'booking') await renderBooking();
             else if (currentTab === 'menu') renderMenu();
             else if (currentTab === 'call') await renderCall();
@@ -726,21 +731,23 @@
             });
         }
         
+        // Автообновление бонусов раз в час
         setInterval(async () => {
             if (isRegistered && userPhone) {
                 await updateRealBonuses();
+                if (currentTab === 'bonus') {
+                    renderBonus();
+                }
             }
         }, 3600000);
         
+        // Загрузка данных
         loadUserData();
         loadBonuses();
         setupTabs();
         document.querySelector('.tab')?.classList.add('active');
         
-        if (isRegistered && userPhone) {
-            updateRealBonuses();
-        }
-        
+        // Запуск приложения
         renderCurrentTab();
     </script>
 </body>
