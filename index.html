@@ -31,7 +31,6 @@
             padding-top: env(safe-area-inset-top, 20px);
         }
         
-        /* Горизонтальный скролл для нижней панели */
         .tab-bar-wrapper {
             position: fixed;
             bottom: 0;
@@ -84,22 +83,17 @@
             border-radius: 40px;
             transition: all 0.2s ease;
             font-family: inherit;
-            backdrop-filter: blur(4px);
         }
         .tab.active { 
             color: #e84545; 
             background: rgba(232, 69, 69, 0.15);
-            box-shadow: 0 0 4px rgba(232, 69, 69, 0.3);
         }
         .tab span {
             font-size: 10px;
             letter-spacing: 0.3px;
         }
-        .tab .emoji-big {
-            font-size: 22px;
-        }
         
-        .card, .menu-item, .promo-card, .booking-card {
+        .card, .menu-item, .promo-card, .booking-card, .admin-card {
             background: linear-gradient(135deg, rgba(18, 18, 22, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
             border-radius: 24px;
             padding: 20px;
@@ -121,6 +115,7 @@
             align-items: center;
             padding: 12px 16px;
             margin-bottom: 8px;
+            border-radius: 16px;
         }
         input, select, textarea {
             font-size: 16px;
@@ -132,7 +127,7 @@
             width: 100%;
             margin-bottom: 14px;
         }
-        input:focus, textarea:focus { outline: none; border-color: #e84545; box-shadow: 0 0 0 3px rgba(232, 69, 69, 0.2); }
+        input:focus, textarea:focus { outline: none; border-color: #e84545; }
         button {
             background: linear-gradient(135deg, #e84545 0%, #c92a2a 100%);
             color: #ffffff;
@@ -146,7 +141,7 @@
             margin-bottom: 12px;
             transition: all 0.2s ease;
         }
-        .btn-secondary { background: linear-gradient(135deg, #3a3a45, #2a2a32); margin-bottom: 0; width: auto; padding: 10px 20px; }
+        .btn-secondary { background: linear-gradient(135deg, #3a3a45, #2a2a32); width: auto; padding: 10px 20px; margin-bottom: 0; }
         .btn-success { background: linear-gradient(135deg, #28a745, #1e6b3b); }
         .button-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
         .restaurant-header h1 { font-size: 34px; font-weight: 800; background: linear-gradient(135deg, #ffffff, #e84545); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 8px; }
@@ -203,10 +198,11 @@
         .history-amount { color: #e84545; font-weight: 600; }
         .loading { text-align: center; padding: 60px; color: rgba(232, 69, 69, 0.6); }
         .info-text { color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; margin-top: 10px; }
+        .booking-card { margin-bottom: 12px; }
+        .admin-booking-item { margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 16px; }
         
         @media (max-width: 480px) {
             .tab { padding: 6px 12px; }
-            .tab .emoji-big { font-size: 20px; }
             .tab span { font-size: 9px; }
         }
     </style>
@@ -257,16 +253,14 @@
         
         const TELEGRAM_USER_ID = tg.initDataUnsafe.user.id;
         const TELEGRAM_USER_NAME = tg.initDataUnsafe.user.first_name || "Гость";
-        const IS_ADMIN = ADMIN_IDS.includes(TELEGRAM_USER_ID);
+        const IS_ADMIN = ADMIN_IDS.includes(Number(TELEGRAM_USER_ID));
         
         // ========== FrontPad API ФУНКЦИЯ ==========
         async function getFrontpadScore(phone) {
             if (!phone) return null;
             
-            // Очищаем номер телефона
             let cleanPhone = phone.replace(/\D/g, '');
             
-            // Приводим к формату 7XXXXXXXXXX
             if (cleanPhone.startsWith('8')) {
                 cleanPhone = '7' + cleanPhone.substring(1);
             } else if (cleanPhone.startsWith('9') && cleanPhone.length === 10) {
@@ -360,9 +354,7 @@
                     birthday: birthday
                 }));
                 
-                // Синхронизируем бонусы с FrontPad после регистрации
                 await syncBonusesWithFrontpad();
-                
                 return true;
             } catch (error) {
                 console.error("Ошибка:", error);
@@ -378,6 +370,7 @@
             }
             
             console.log('Синхронизация с FrontPad для номера:', userPhone);
+            showToast("🔄 Синхронизация с FrontPad...");
             
             const fpData = await getFrontpadScore(userPhone);
             if (fpData && fpData.score !== null) {
@@ -391,11 +384,13 @@
                     });
                     if (userBonuses.history.length > 20) userBonuses.history.pop();
                     saveBonuses();
-                    showToast(`🔄 Бонусы обновлены: ${fpData.score} баллов`);
+                    showToast(`✅ Бонусы обновлены: ${fpData.score} баллов`);
+                } else {
+                    showToast(`💰 Баланс: ${fpData.score} баллов`);
                 }
                 return fpData;
             } else {
-                console.log('Не удалось получить данные из FrontPad');
+                showToast("⚠️ Не удалось получить данные из FrontPad", true);
                 return null;
             }
         }
@@ -425,6 +420,33 @@
             } catch { bookings = []; return []; }
         }
         
+        async function saveBooking(booking) {
+            try {
+                const response = await fetch(SHEET_API, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify([booking]) 
+                });
+                return response.ok;
+            } catch { return false; }
+        }
+        
+        async function updateBookingStatus(bookingId, newStatus) {
+            try {
+                const booking = bookings.find(b => b.id === bookingId);
+                if (booking) {
+                    booking.status = newStatus;
+                    await fetch(SHEET_API, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookings)
+                    });
+                    return true;
+                }
+            } catch (error) { console.error(error); }
+            return false;
+        }
+        
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -435,7 +457,7 @@
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
         
-        // ========== QR-сканер для вызова ==========
+        // ========== QR-сканер ==========
         let html5QrCode = null;
         
         async function startScanner() {
@@ -444,7 +466,7 @@
             scannerContainer.innerHTML = `
                 <div class="modal-content" style="text-align: center;">
                     <h3>🔔 ВЫЗОВ КАЛЬЯНЩИКА</h3>
-                    <p style="margin-bottom: 12px;">📷 Наведите камеру на QR-код стола</p>
+                    <p>Наведите камеру на QR-код стола</p>
                     <div id="qr-reader" style="width: 100%; margin: 0 auto;"></div>
                     <div class="button-group" style="margin-top: 20px;">
                         <button id="closeScannerBtn" class="btn-secondary">❌ ОТМЕНА</button>
@@ -468,11 +490,10 @@
                             showToast("❌ Неверный формат QR-кода", true);
                         }
                     } else {
-                        showToast("❌ Неверный QR-код", true);
+                        showToast("❌ Неверный QR-код. Должен начинаться с Huqqa-", true);
                     }
                 });
             } catch (err) {
-                console.error(err);
                 showToast("❌ Не удалось получить доступ к камере", true);
                 scannerContainer.remove();
             }
@@ -490,7 +511,7 @@
                 <div class="modal-content">
                     <h3>🔔 ВЫЗОВ КАЛЬЯНЩИКА</h3>
                     <label>🍽️ СТОЛ №${tableNumber}</label>
-                    <label>💬 СООБЩЕНИЕ</label>
+                    <label>💬 СООБЩЕНИЕ (опционально)</label>
                     <textarea id="callMessage" rows="3" placeholder="Например: принесите уголь, поменяйте чашу..."></textarea>
                     <div class="button-group">
                         <button id="sendCallBtn" class="btn-success">📤 ОТПРАВИТЬ</button>
@@ -520,6 +541,66 @@
             document.getElementById('closeCallBtn').addEventListener('click', () => modal.remove());
         }
         
+        // ========== Вкладка АДМИН ==========
+        async function renderAdmin() {
+            await loadBookings();
+            const pendingBookings = bookings.filter(b => b.status === 'pending' || !b.status);
+            const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
+            
+            let html = `<h2>👑 АДМИН-ПАНЕЛЬ</h2>`;
+            
+            html += `<div class="admin-card"><h3>📋 НОВЫЕ БРОНИ (${pendingBookings.length})</h3>`;
+            if (pendingBookings.length === 0) {
+                html += '<p>Нет новых броней</p>';
+            } else {
+                pendingBookings.forEach(b => {
+                    html += `<div class="admin-booking-item">
+                        <strong>${b.name}</strong><br>
+                        📞 ${b.phone}<br>
+                        📅 ${b.date} в ${b.time}<br>
+                        👥 ${b.guests} чел.<br>
+                        🆔 ${b.userId}<br>
+                        <div class="button-group" style="margin-top: 10px;">
+                            <button class="confirmBtn" data-id="${b.id}" style="background: #28a745;">✅ ПОДТВЕРДИТЬ</button>
+                            <button class="cancelBtn" data-id="${b.id}" style="background: #dc3545;">❌ ОТМЕНИТЬ</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            html += `</div>`;
+            
+            html += `<div class="admin-card"><h3>✅ ПОДТВЕРЖДЕННЫЕ (${confirmedBookings.length})</h3>`;
+            if (confirmedBookings.length === 0) {
+                html += '<p>Нет подтвержденных броней</p>';
+            } else {
+                confirmedBookings.forEach(b => {
+                    html += `<div class="admin-booking-item">
+                        <strong>${b.name}</strong> — ${b.date} ${b.time}<br>
+                        📞 ${b.phone} | 👥 ${b.guests} чел.
+                    </div>`;
+                });
+            }
+            html += `</div>`;
+            
+            document.getElementById('app').innerHTML = html;
+            
+            document.querySelectorAll('.confirmBtn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await updateBookingStatus(btn.dataset.id, 'confirmed');
+                    showToast("✅ Бронь подтверждена");
+                    await renderAdmin();
+                });
+            });
+            
+            document.querySelectorAll('.cancelBtn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await updateBookingStatus(btn.dataset.id, 'cancelled');
+                    showToast("❌ Бронь отклонена");
+                    await renderAdmin();
+                });
+            });
+        }
+        
         // ========== Вкладки ==========
         async function renderCall() {
             const html = `
@@ -530,7 +611,7 @@
                 <div class="card" style="text-align: center;">
                     <div style="font-size: 64px; margin-bottom: 20px;">🔔</div>
                     <button id="scanQrBtn">📷 СКАНИРОВАТЬ QR-КОД</button>
-                    <p class="info-text">QR-код должен быть в формате: Huqqa-XXX</p>
+                    <p class="info-text">QR-код должен быть в формате: Huqqa-XXX (пример: Huqqa-101)</p>
                 </div>
             `;
             document.getElementById('app').innerHTML = html;
@@ -539,7 +620,8 @@
         
         async function renderBooking() {
             await loadBookings();
-            const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID));
+            const myActiveBookings = bookings.filter(b => String(b.userId) === String(TELEGRAM_USER_ID) && b.status !== 'cancelled');
+            
             const html = `
                 <div class="restaurant-header"><h1>⟡ HUQQA LOUNGE ⟡</h1><p>ЗАБРОНИРУЙТЕ СТОЛИК</p></div>
                 <div class="card">
@@ -548,30 +630,49 @@
                     <input type="date" id="date" min="${new Date().toISOString().split('T')[0]}">
                     <input type="time" id="time">
                     <input type="number" id="guests" placeholder="Кол-во гостей" min="1" max="10" value="2">
-                    <button id="submitBookingBtn">ЗАБРОНИРОВАТЬ</button>
+                    <button id="submitBookingBtn">⟡ ЗАБРОНИРОВАТЬ СТОЛ ⟡</button>
                 </div>
-                <h3>МОИ БРОНИ</h3>
-                ${myActiveBookings.length === 0 ? '<p>Нет активных броней</p>' : myActiveBookings.map(b => `<div class="booking-card"><strong>${b.date} ${b.time}</strong><br>${b.guests} чел. | ${b.status === 'pending' ? '<span class="status-pending">ОЖИДАЕТ</span>' : '<span class="status-confirmed">ПОДТВЕРЖДЕНО</span>'}</div>`).join('')}
+                <h3>📋 МОИ БРОНИРОВАНИЯ</h3>
+                ${myActiveBookings.length === 0 ? '<p>У вас нет активных броней</p>' : 
+                    myActiveBookings.map(b => `<div class="booking-card">
+                        <strong>${b.date} в ${b.time}</strong><br>
+                        👥 ${b.guests} чел. | 
+                        ${b.status === 'pending' ? '<span class="status-pending">⏳ ОЖИДАЕТ ПОДТВЕРЖДЕНИЯ</span>' : '<span class="status-confirmed">✅ ПОДТВЕРЖДЕНО</span>'}
+                    </div>`).join('')}
             `;
             document.getElementById('app').innerHTML = html;
+            
             document.getElementById('submitBookingBtn')?.addEventListener('click', async () => {
-                const newBooking = {
-                    userId: String(TELEGRAM_USER_ID),
-                    name: document.getElementById('name').value,
-                    phone: document.getElementById('phone').value,
-                    date: document.getElementById('date').value,
-                    time: document.getElementById('time').value,
-                    guests: parseInt(document.getElementById('guests').value),
-                    status: 'pending',
-                    id: Date.now().toString()
-                };
-                if (!newBooking.name || !newBooking.phone || !newBooking.date || !newBooking.time) {
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                const guests = parseInt(document.getElementById('guests').value);
+                
+                if (!name || !phone || !date || !time) {
                     showToast("Заполните все поля", true);
                     return;
                 }
-                await fetch(SHEET_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([newBooking]) });
-                showToast("✅ Стол забронирован!");
-                setTimeout(() => renderBooking(), 1000);
+                
+                const newBooking = {
+                    id: Date.now().toString(),
+                    userId: String(TELEGRAM_USER_ID),
+                    name: name,
+                    phone: phone,
+                    date: date,
+                    time: time,
+                    guests: guests,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                };
+                
+                const saved = await saveBooking(newBooking);
+                if (saved) {
+                    showToast("✅ Стол успешно забронирован!");
+                    setTimeout(() => renderBooking(), 1000);
+                } else {
+                    showToast("❌ Ошибка бронирования", true);
+                }
             });
         }
         
@@ -579,16 +680,21 @@
             const menuHtml = `
                 <h2>📖 НАШЕ МЕНЮ</h2>
                 <div class="menu-category">🔥 КАЛЬЯНЫ</div>
-                <div class="menu-item"><strong>Бизнес кальян</strong><span>1500 ₽</span></div>
-                <div class="menu-item"><strong>Классический кальян</strong><span>1700 ₽</span></div>
-                <div class="menu-item"><strong>Премиум кальян</strong><span>1900 ₽</span></div>
-                <div class="menu-item"><strong>Авторский кальян</strong><span>2500 ₽</span></div>
+                <div class="menu-item"><strong>Бизнес кальян (Пн-Пт 12:00-17:00)</strong><span style="color:#e84545;">1500 ₽</span></div>
+                <div class="menu-item"><strong>Кальян на классической чаше</strong><span style="color:#e84545;">1700 ₽</span></div>
+                <div class="menu-item"><strong>Премиум кальян с сигарным листом</strong><span style="color:#e84545;">1900 ₽</span></div>
+                <div class="menu-item"><strong>Авторский кальян на цитрусовый</strong><span style="color:#e84545;">2500 ₽</span></div>
                 <div class="menu-category">🍹 НАПИТКИ</div>
-                <div class="menu-item"><strong>RedBull</strong><span>300 ₽</span></div>
-                <div class="menu-item"><strong>Лимонад Star Bar</strong><span>350 ₽</span></div>
-                <div class="menu-item"><strong>Пиво Корона</strong><span>400 ₽</span></div>
+                <div class="menu-item"><strong>Энергетик RedBull</strong><span style="color:#e84545;">300 ₽</span></div>
+                <div class="menu-item"><strong>Лимонад Star Bar Craft</strong><span style="color:#e84545;">350 ₽</span></div>
+                <div class="menu-item"><strong>Пиво Корона Экстра</strong><span style="color:#e84545;">400 ₽</span></div>
                 <div class="menu-category">🍕 ЕДА</div>
-                <div class="menu-item"><strong>СуперМясная пицца</strong><span>1000 ₽</span></div>
+                <div class="menu-item"><strong>СуперМясная пицца</strong><span style="color:#e84545;">1000 ₽</span></div>
+                <div class="menu-category">🍵 ЧАЙ И КОФЕ</div>
+                <div class="menu-item"><strong>Авторский Банановый Улун</strong><span style="color:#e84545;">600 ₽</span></div>
+                <div class="menu-item"><strong>Эспрессо</strong><span style="color:#e84545;">150 ₽</span></div>
+                <div class="menu-category">🍊 ДОБАВКИ</div>
+                <div class="menu-item"><strong>Апельсин/Грейпфрут</strong><span style="color:#e84545;">150 ₽</span></div>
             `;
             document.getElementById('app').innerHTML = menuHtml;
         }
@@ -596,35 +702,37 @@
         async function renderBonus() {
             document.getElementById('app').innerHTML = '<div class="loading">🔄 Загрузка бонусов...</div>';
             
-            // Синхронизируем с FrontPad при открытии вкладки
             await syncBonusesWithFrontpad();
             
             const balanceInRubles = (userBonuses.balance / 2).toFixed(0);
-            const fpInfo = frontpadData ? `<div class="card-info">🎫 Карта: ${frontpadData.card || '—'} | Скидка: ${frontpadData.sale || '0'}%</div>` : '<div class="card-info">🔄 Данные из FrontPad не получены</div>';
+            const fpInfo = frontpadData ? 
+                `<div class="card-info">🎫 Номер карты: ${frontpadData.card || '—'} | 💳 Скидка: ${frontpadData.sale || '0'}%</div>` : 
+                '<div class="card-info">⚠️ Данные из FrontPad не получены. Убедитесь, что номер телефона внесен в систему.</div>';
             
             const html = `
                 <h2>🎁 МОЯ КАРТА ГОСТЯ</h2>
                 <div class="card">
                     <h3>💰 БОНУСНЫЙ БАЛАНС</h3>
                     <div class="bonus-balance">${userBonuses.balance}</div>
-                    <p>100 бонусов = 50₽ скидки</p>
-                    <p>≈ ${balanceInRubles} ₽ кэшбэка</p>
+                    <p style="text-align: center;">100 бонусов = 50₽ скидки</p>
+                    <p style="text-align: center; font-size: 18px; font-weight: 600;">≈ ${balanceInRubles} ₽ кэшбэка</p>
                     ${fpInfo}
-                    <button id="syncBtn">🔄 ОБНОВИТЬ БОНУСЫ</button>
+                    <button id="syncBonusBtn">🔄 ОБНОВИТЬ БОНУСЫ ИЗ FRONTPAD</button>
                 </div>
                 <div class="card">
-                    <h3>📜 ИСТОРИЯ</h3>
-                    ${userBonuses.history.length === 0 ? '<p>Пока нет операций</p>' : userBonuses.history.slice(0, 10).map(h => `
-                        <div class="history-item">
-                            <div class="history-date">${h.date}</div>
-                            <div><span class="history-amount">+${h.amount}</span> — ${h.reason}</div>
-                        </div>
-                    `).join('')}
+                    <h3>📜 ИСТОРИЯ ОПЕРАЦИЙ</h3>
+                    ${userBonuses.history.length === 0 ? '<p style="text-align: center; opacity: 0.6;">Пока нет операций</p>' : 
+                        userBonuses.history.slice(0, 10).map(h => `
+                            <div class="history-item">
+                                <div class="history-date">${h.date}</div>
+                                <div><span class="history-amount">${h.amount > 0 ? '+' : ''}${h.amount}</span> — ${h.reason}</div>
+                            </div>
+                        `).join('')}
                 </div>
             `;
             document.getElementById('app').innerHTML = html;
-            document.getElementById('syncBtn')?.addEventListener('click', async () => {
-                showToast("🔄 Синхронизация...");
+            
+            document.getElementById('syncBonusBtn')?.addEventListener('click', async () => {
                 await syncBonusesWithFrontpad();
                 await renderBonus();
             });
@@ -632,15 +740,49 @@
         
         function renderPromo() {
             const html = `<h2>🔥 АКЦИИ</h2>
-                <div class="card"><strong>🕒 СЧАСТЛИВЫЕ ЧАСЫ</strong><br>Пн-Пт 12:00-17:00, кальян 1500₽<br><button class="copyPromoBtn" data-code="HAPPY1500">📋 КОД: HAPPY1500</button></div>
-                <div class="card"><strong>🎂 ДЕНЬ РОЖДЕНИЯ</strong><br>Скидка 20% на весь счёт<br><button class="copyPromoBtn" data-code="BIRTHDAY20">📋 КОД: BIRTHDAY20</button></div>`;
+                <div class="promo-card">
+                    <strong>🕒 СЧАСТЛИВЫЕ ЧАСЫ</strong><br>
+                    Пн-Пт с 12:00 до 17:00. Кальян 1500₽!<br>
+                    <button class="copyPromoBtn" data-code="HAPPY1500">📋 КОД: HAPPY1500</button>
+                </div>
+                <div class="promo-card">
+                    <strong>🎂 ДЕНЬ РОЖДЕНИЯ</strong><br>
+                    Скидка 20% на весь счёт в день рождения<br>
+                    <button class="copyPromoBtn" data-code="BIRTHDAY20">📋 КОД: BIRTHDAY20</button>
+                </div>
+                <div class="promo-card">
+                    <strong>🎁 БОНУС ЗА ОТЗЫВ</strong><br>
+                    Оставьте отзыв и получите 200 бонусов<br>
+                    <button class="copyPromoBtn" data-code="REVIEW200">📋 КОД: REVIEW200</button>
+                </div>`;
             document.getElementById('app').innerHTML = html;
-            document.querySelectorAll('.copyPromoBtn').forEach(btn => btn.addEventListener('click', () => { navigator.clipboard.writeText(btn.dataset.code); showToast("✅ Код скопирован"); }));
+            document.querySelectorAll('.copyPromoBtn').forEach(btn => {
+                btn.addEventListener('click', () => { 
+                    navigator.clipboard.writeText(btn.dataset.code); 
+                    showToast("✅ Код скопирован"); 
+                });
+            });
         }
         
         function renderContacts() {
             const html = `<h2>📞 КОНТАКТЫ</h2>
-                <div class="card"><p>📍 ул. Молодежная 15Б, Химки</p><p>📞 <a href="tel:+79099846677" style="color:#e84545;">+7 (909) 984-66-77</a></p><p>🕒 Вс-Чт: 12:00 – 02:00</p><p>🕒 Пт-Сб: 12:00 – 03:00</p><p>📱 <a href="https://t.me/huqqa_lounge" style="color:#e84545;">@huqqa_lounge</a></p></div>`;
+                <div class="card">
+                    <p>📍 ул. Молодежная 15Б, Химки</p>
+                    <p>📞 <a href="tel:+79099846677" style="color:#e84545; text-decoration: none;">+7 (909) 984-66-77</a></p>
+                    <p>🕒 Вс-Чт: 12:00 – 02:00</p>
+                    <p>🕒 Пт-Сб: 12:00 – 03:00</p>
+                    <p>📱 <a href="https://t.me/huqqa_lounge" style="color:#e84545; text-decoration: none;">@huqqa_lounge</a></p>
+                    <p>🌟 Instagram: @huqqa_lounge</p>
+                </div>
+                <div class="card">
+                    <h3>🏆 СТАТУС ГОСТЯ</h3>
+                    <p style="text-align: center; font-size: 24px; font-weight: 700; color: #e84545;">
+                        ${userBonuses.balance >= 1000 ? '💎 ПЛАТИНОВЫЙ' : userBonuses.balance >= 500 ? '✨ ЗОЛОТОЙ' : userBonuses.balance >= 100 ? '⭐ СЕРЕБРЯНЫЙ' : '🌿 НАЧИНАЮЩИЙ'}
+                    </p>
+                    <p style="text-align: center; font-size: 12px; opacity: 0.7;">
+                        ${userBonuses.balance >= 1000 ? 'VIP-обслуживание и отдельная зона' : userBonuses.balance >= 500 ? 'Приоритетное бронирование' : userBonuses.balance >= 100 ? 'Накопительная скидка 5%' : 'Копите бонусы для повышения статуса!'}
+                    </p>
+                </div>`;
             document.getElementById('app').innerHTML = html;
         }
         
@@ -653,12 +795,15 @@
                 renderCurrentTab();
                 return;
             }
+            
             if (currentTab === 'booking') await renderBooking();
             else if (currentTab === 'menu') renderMenu();
             else if (currentTab === 'call') await renderCall();
             else if (currentTab === 'bonus') await renderBonus();
             else if (currentTab === 'promo') renderPromo();
             else if (currentTab === 'contacts') renderContacts();
+            else if (currentTab === 'admin' && IS_ADMIN) await renderAdmin();
+            else await renderBooking();
         }
         
         function showPhoneRegistrationModal() {
@@ -667,17 +812,25 @@
                 modal.className = 'modal';
                 modal.innerHTML = `<div class="modal-content">
                     <h3>⟡ HUQQA LOUNGE ⟡</h3>
-                    <p>Укажите ваши данные</p>
-                    <p style="color:#e84545;">🎁 +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ</p>
+                    <p style="text-align:center;">Укажите ваши данные для бонусной карты</p>
+                    <p style="text-align:center; color:#e84545;">🎁 +300 БОНУСОВ ЗА РЕГИСТРАЦИЮ</p>
+                    <label>📞 ТЕЛЕФОН</label>
                     <input type="tel" id="phoneInput" placeholder="+7 XXX XXX-XX-XX">
+                    <label>🎂 ДАТА РОЖДЕНИЯ</label>
                     <input type="date" id="birthdayInput" max="${new Date().toISOString().split('T')[0]}">
-                    <button id="savePhoneBtn">ПРОДОЛЖИТЬ</button>
+                    <div class="button-group">
+                        <button id="savePhoneBtn">⟡ ПРОДОЛЖИТЬ ⟡</button>
+                    </div>
                 </div>`;
                 document.body.appendChild(modal);
+                
                 document.getElementById('savePhoneBtn')?.addEventListener('click', async () => {
                     const phone = document.getElementById('phoneInput').value.trim();
                     const birthday = document.getElementById('birthdayInput').value;
-                    if (!phone || !birthday) { showToast("Заполните все поля", true); return; }
+                    if (!phone || !birthday) { 
+                        showToast("Заполните все поля", true); 
+                        return; 
+                    }
                     await saveUserDataToCloud(phone, birthday);
                     modal.remove();
                     resolve(true);
@@ -687,6 +840,15 @@
         
         function setupTabs() {
             const tabBar = document.getElementById('tabBar');
+            
+            if (IS_ADMIN && !document.querySelector('.tab[data-tab="admin"]')) {
+                const adminTab = document.createElement('button');
+                adminTab.className = 'tab';
+                adminTab.setAttribute('data-tab', 'admin');
+                adminTab.innerHTML = '👑<span>АДМИН</span>';
+                tabBar.appendChild(adminTab);
+            }
+            
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     currentTab = tab.dataset.tab;
@@ -703,7 +865,6 @@
         setupTabs();
         document.querySelector('.tab')?.classList.add('active');
         
-        // Если пользователь зарегистрирован, синхронизируем бонусы
         if (isRegistered && userPhone) {
             syncBonusesWithFrontpad().then(() => renderCurrentTab());
         } else {
